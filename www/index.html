@@ -1,0 +1,39 @@
+<html>
+<head>
+<title>BaF 3000</title>
+<style>
+body {
+    font: normal 10px Verdana, Arial, sans-serif;
+}
+</style>
+</head>
+<body bgcolor=white>
+
+<table border=0 bgcolor=white>
+<tr><td valign='top' align=center width=300>
+	<div id='statusp1'></div>
+	</td><td align=center width=350 valign='top'>
+	<div id='statusstate'></div>
+	</td>
+</tr>
+<tr><td valign='top' align=center>
+	</td><td align=center valign='top'>
+	<div id='statusbatt'></div>
+	</td>
+</tr>
+</table>
+</body>
+
+<script type="text/javascript" src="javascript/jquery.js"></script>
+<script type="text/javascript">
+	$(document).ready(function(){
+	  refreshTable();
+	});
+	function refreshTable(){
+		$('#statusp1').load('statusp1.php');
+		$('#statusstate').load('statusstate.php');
+		$('#statusbatt').load('statusbatt.php');
+		setTimeout(refreshTable, 1500);
+	}
+</script>
+</html>

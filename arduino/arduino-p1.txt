@@ -1,0 +1,157 @@
+/// Parse P1 data from smart meter and send as compressed packet over RF12.
+/// @see http://jeelabs.org/2013/01/02/encoding-p1-data/
+// 2012-12-31 <jc@wippler.nl> http://opensource.org/licenses/mit-license.php
+
+// Changed to work with Ethernet shield, 2014-06 Robert Hekkers
+
+#include <avr/wdt.h>
+#include <SoftwareSerial.h>
+#include <EtherCard.h>
+
+#define DEBUG 0   // set to 1 to use fake data instead of SoftwareSerial
+#define LED   1   // set to 0 to disable LED blinking
+#define TIMEOUT_MS 2000
+
+SoftwareSerial mySerial (7, 17 , true); // rx, tx, inverted logic
+#define NTYPES (sizeof typeMap / sizeof *typeMap)
+// list of codes to be sent out (only compares lower byte!)
+const long int typeMap [] = {181, 182, 281, 282, 96140, 170, 270, 2410, 2420, 2421, 2440};
+bool receiving;
+
+byte Ethernet::buffer[700];
+static byte mymac[] = { 0x74, 0x69, 0x69, 0x2D, 0x13, 0x01 };
+const char website[] PROGMEM = "bramenstruik.lan";
+uint8_t hisip[] = { 192, 168, 11, 238 };
+Stash stash;
+
+long int type;
+uint32_t value;
+uint32_t readings[NTYPES + 1];
+
+static bool p1_scanner (char c) {
+  switch (c) {
+    case ':':
+      type = 0;
+      value = 0;
+      break;
+    case '(':
+      if (type == 0)
+        type = value; // truncates to lower byte
+      value = 0;
+    case '.':
+      break;
+    case ')':
+      if (type)
+        return true;
+      break;
+    default:
+      if ('0' <= c && c <= '9')
+        value = 10 * value + (c - '0');
+  }
+  return false;
+}
+
+static void collectData (bool empty = false) {
+  if (!empty) {
+    for (byte i = 0; i < NTYPES; ++i) {
+      Serial.print("@ ");
+      Serial.print(typeMap[i]);
+      Serial.print('=');
+      Serial.println(readings[i]);
+    }
+    byte sd = stash.create();
+    stash.print("0,");
+    stash.println(millis() / 1000);
+    for (byte i = 0; i < NTYPES; ++i) {
+      stash.print(typeMap[i]);
+      stash.print(",");
+      stash.println(readings[i]);
+    }
+    stash.save();
+    /* failed to save? Reset */
+    if(stash.size() == 0) {
+      void(* resetFunc) (void) = 0; //declare reset function @ address 0
+      resetFunc();  //call reset
+    }
+    // generate the header with payload - note that the stash size is used,
+    // and that a "stash descriptor" is passed in as argument using "$H"
+    Stash::prepare(PSTR("GET http://$F/baf/p1.php HTTP/1.0" "\n"
+                        "Host: $F" "\n"
+                        "Content-Length: $D" "\n"
+                        "\n"
+                        "$H"),
+                   website, website, stash.size(), sd);
+    ether.tcpSend();     // send the packet - this also releases all stash buffers once done
+    if (stash.freeCount() <= 3) {
+      Stash::initMap(56);
+      void(* resetFunc) (void) = 0; //declare reset function @ address 0
+      resetFunc();  //call reset
+      }
+    }
+}
+
+void setup () {
+  if (DEBUG) {
+    Serial.begin(115200);
+    Serial.println("n[p1poster]");
+  }
+  mySerial.begin(9600);
+  digitalWrite(7, 1); // enable pull-up
+  collectData(true); // empty packet on power-up
+
+  delay(2000);
+  if (ether.begin(sizeof Ethernet::buffer, mymac, 10) == 0)
+    Serial.println( "Failed to access Ethernet controller");
+  if (!ether.dhcpSetup())
+    Serial.println("DHCP failed");
+
+  ether.printIp("IP:  ", ether.myip);
+  ether.printIp("GW:  ", ether.gwip);
+  ether.printIp("DNS: ", ether.dnsip);
+
+  if (!ether.dnsLookup(website)) {
+    Serial.println("DNS failed");
+    ether.copyIp(ether.hisip, hisip);
+  }
+  ether.hisport = 80;
+  ether.printIp("SRV: ", ether.hisip);
+}
+
+void serialLoop() {
+  byte c;
+  while (mySerial.available()) {
+
+    c = mySerial.read();
+    if (c > 0) {
+      c &= 0x7F;
+    }
+    //c &= ~(1 << 7);
+
+    switch (c) {
+      case '/':
+        receiving = true;
+        break;
+      case '!':
+        receiving = false;
+        collectData();
+        memset(readings, 0, sizeof readings);
+        break;
+      default:
+        if (p1_scanner(c)) {
+          for (byte i = 0; i < NTYPES; ++i)
+            if (type == typeMap[i]) {
+              readings[i] = value;
+              break;
+            }
+        }
+    }
+  }
+  if(!receiving) {
+    ether.packetLoop(ether.packetReceive());
+  }
+}
+
+void loop () {
+  serialLoop();
+}
+
