@@ -36,10 +36,14 @@ $cfg['timer_wait'] = 60;
 
 // Battery
 $cfg['batt_dcpin'] = 6;
-$cfg['batt_volt_crit_min'] = 3.2; // Volt
-$cfg['batt_volt_crit_max'] = 4.2;
-$cfg['batt_volt_min'] = 3.45;
-$cfg['batt_volt_max'] = 4.05;
+$cfg['batt_volt_crit_min'] = 3.2 * 8; // Volt
+$cfg['batt_volt_crit_max'] = 4.2 * 8;
+$cfg['batt_cell_crit_min'] = 3.2; // Volt
+$cfg['batt_cell_crit_max'] = 4.2;
+$cfg['batt_volt_min'] = 3.45 * 8;
+$cfg['batt_volt_max'] = 4.05 * 8;
+$cfg['batt_cell_min'] = 3.45;
+$cfg['batt_cell_max'] = 4.05;
 $cfg['batt_cell_cmd'] = "python ~/baf/readvoltage.py";
 $cfg['batt_voltage_div'] = ((56000+6800)/6800);
 

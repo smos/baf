@@ -40,16 +40,15 @@ foreach($batt_array['cells'] as $cell) {
 		$bgcolor = "lightsteelblue";
 	if($cell == $batt_array['cell_min'])
 		$bgcolor = "khaki";
-	$height = round(($cell-$cfg['batt_volt_crit_min']) / (($cfg['batt_volt_crit_max']-$cfg['batt_volt_crit_min']) / 100));
+	$height = round(($cell-$cfg['batt_cell_crit_min']) / (($cfg['batt_cell_crit_max']-$cfg['batt_cell_crit_min']) / 100));
 	echo "<td width=40 height=100 valign=bottom style='border: 1px solid black;'><table><tr><td bgcolor={$bgcolor} height={$height} width=50></td></tr></table> </td>";
 }
 echo "</tr></table>";
 echo "</td><td>&nbsp;</td></tr>";
-/* 
-echo "<tr><td><pre>";
-echo "The data inside shared memory is: \n" . print_r($batt_array, true) . "\n";
-echo "</pre></td></tr>";
-*/
+
+echo "<!-- ";
+echo "The array contains:\n" . print_r($batt_array, true) . "\n";
+echo "-->";
 
 echo "</table>";
 

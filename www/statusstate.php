@@ -128,21 +128,21 @@ foreach($state['inverters'] as $idx => $array) {
 		echo "<img src='images/power_idle.png' width=40>";
 	echo "</td>";
 }
-echo "</tr>";
+echo "</tr>\n";
 echo "<tr>";
 foreach($state['inverters'] as $idx => $array) {
 	echo "<td align=center><font size=2>";
 	echo 0 + ($array['pwm'] * $cfg['inverters'][$idx]['power']);
 	echo "W</td>";
 }
-echo "</tr>";
+echo "</tr>\n";
 echo "<tr>";
 foreach($state['inverters'] as $idx => $array) {
 	echo "<td align=center>";
 	echo "<img src='images/inverter.png' width=40>";
 	echo "</td>";
 }
-echo "</tr>";
+echo "</tr>\n";
 echo "<tr>";
 foreach($state['inverters'] as $idx => $array) {
 	echo "<td align=center>";
@@ -157,9 +157,9 @@ foreach($state['inverters'] as $idx => $array) {
 		echo "<img src='images/power_idle.png' width=40>";
 	echo "</td>";
 }
-echo "</tr>";
+echo "</tr>\n";
 
-echo "</table>";
+echo "</table>\n";
 
 echo "</td><td width=150 align=left>";
 echo "<table border=0>";
@@ -174,21 +174,21 @@ foreach($state['chargers'] as $idx => $array) {
 		echo "<img src='images/power_idle.png' width=40>";
 	echo "</td>";
 }
-echo "</tr>";
+echo "</tr>\n";
 echo "<tr>";
 foreach($state['chargers'] as $idx => $array) {
 	echo "<td align=center><font size=2>";
 	echo 0 + ($array['pwm'] * $cfg['chargers'][$idx]['power']);
 	echo "W</td>";
 }
-echo "</tr>";
+echo "</tr>\n";
 echo "<tr>";
 foreach($state['chargers'] as $idx => $array) {
 	echo "<td align=center>";
 	echo "<img src='images/charger.png' width=40>";
 	echo "</td>";
 }
-echo "</tr>";
+echo "</tr>\n";
 echo "<tr>";
 foreach($state['chargers'] as $idx => $array) {
 	echo "<td align=center>";
@@ -203,11 +203,11 @@ foreach($state['chargers'] as $idx => $array) {
 		echo "<img src='images/power_idle.png' width=40>";
 	echo "</td>";
 }
-echo "</tr>";
+echo "</tr>\n";
 
-echo "</td></tr>";
-echo "</table>";
-echo "</td></tr>";
+echo "</td></tr>\n";
+echo "</table>\n";
+echo "</td></tr>\n";
 
 echo "<tr><td colspan=3 align=center>";
 if($state['battery_connect'] === true)
@@ -218,13 +218,12 @@ if(($state['charger_throttle'] < 1) && ($state['charger_throttle'] > 0) && ($sta
 	echo "<img src='images/limiter.png' width=30>";
 if(($state['inverter_throttle'] < 1) && ($state['inverter_throttle'] > 0) && ($state['battery'] == "discharging"))
 	echo "<img src='images/limiter.png' width=30>";
-echo "</td></tr>";
+echo "</td></tr>\n";
 
-/*
-echo "<tr><td colspan=3><pre>";
-echo "The data inside shared memory is: \n" . print_r($state, true) . "\n";
-echo "</pre></td></tr>";
-*/
+echo "<!-- ";
+echo "The status array contains:\n" . print_r($state, true) . "\n";
+echo "-->";
+
 echo "</table>";
 
 ?>

@@ -85,13 +85,14 @@ if($dev->init() === false) {
 $battstate = array();
 // Battery status should connect the battery for us if it's good
 $battstate = battery_status($cfg, $battstate);
-
 /* write the startup state so it's live */
 write_state_shm($shm_state_id, $state);
 write_state_shm($shm_batt_id, $battstate);
+if($state['battery_connect'] === false)
+	log_message($state, "Something horribly wrong with the battery");
 
 // Enter closed loop
-while(true) {
+while($state['battery_connect']) {
 	// Check if the sensor is current atleast
 	$p1_pow = read_p1_shm($shm_p1_key, $seg_size);
 	$battstate = battery_status($cfg, $battstate);

@@ -150,7 +150,7 @@ function controller($cfg, $state, $power, $battstate, $dev) {
 			$state['duration'][$state['operation']] = $state[$state['operation']] - $state[-1];
 			/* calculate how much we can drive the PWM, the actual percentage is determined in the driver */
 			$power_diff = 0 - $power['power_gen_cur'] + $power['power_cons_cur'] - $cur_inverter_power;
-			$state = log_message($state, "Consumption power diff = {$power_diff}, inverter power {$cur_inverter_power}");
+			// $state = log_message($state, "Consumption power diff = {$power_diff}, inverter power {$cur_inverter_power}");
 			/* Calculate PWM based on current diff but add current inverter power */
 			$state['inverter_power'] = round(($power_diff + $cur_inverter_power) - $cfg['pow_cons_min']);
 			if(($power_diff - $cfg['pow_cons_min'] + $cur_inverter_power) < $inverters['power_min']) {
@@ -225,7 +225,7 @@ function controller($cfg, $state, $power, $battstate, $dev) {
 			$power_diff = 0 - $power['power_cons_cur'] + $power['power_gen_cur'] - $cur_charger_power;
 			/* calculate how much we can drive the PWM, the actual percentage is determined in the driver */
 			$state['charger_power'] = round(($power_diff + $cur_charger_power) - $cfg['pow_gen_min']);
-			$state = log_message($state, "Generation power diff = {$power_diff}, charger power {$cur_charger_power}");
+			// $state = log_message($state, "Generation power diff = {$power_diff}, charger power {$cur_charger_power}");
 			if(($power_diff - $cfg['pow_gen_min'] + $cur_charger_power) < $chargers['power_min']) {
 				$state['operation'] = $state['operation'] - 1;
 				$state = log_message($state,"Not enough generation to drive the Charger with minium of {$chargers['power_min']} Watt  moving to state {$state['operation']}");
@@ -326,7 +326,7 @@ function get_cell_voltages($cfg, $battstate) {
 			return $battstate['cells'];
 		}
 		foreach($out as $line) {
-			echo "$line\n";
+			#echo "$line\n";
 			if(!empty(trim($line))) {
 				$c_arr = explode(":", $line);
 				$cells[$c_arr[0]] = floatval(trim($c_arr[1])) * floatval($cfg['batt_voltage_div']);
@@ -351,43 +351,43 @@ function battery_status($cfg, $battstate) {
 	$cellcount = count($cells);
 	/* set 0% at $cfg['batt_volt_crit_min'] and 100% at $cfg['batt_volt_crit_max'] */
 	/* use the lowest cell voltage for the battery level, that way you can see it never charges "fully" again */
-	$range_diff = floatval($cfg['batt_volt_crit_max']) - floatval($cfg['batt_volt_crit_min']);
-	$cell_diff = floatval($battstate['cell_min']) - floatval($cfg['batt_volt_crit_min']);
+	$range_diff = floatval($cfg['batt_cell_crit_max']) - floatval($cfg['batt_cell_crit_min']);
+	$cell_diff = floatval($battstate['cell_min']) - floatval($cfg['batt_cell_crit_min']);
 	$battstate['level'] = round(($cell_diff / $range_diff) * 100);
 
 
-	if((($battstate['cell_min'] > $cfg['batt_volt_crit_min']) && ($battstate['cell_min'] < $cfg['batt_volt_min'])) && ($state['battery_connect'] === false)) {
-		$state = log_message($state,"Battery cell voltage below minimum {$cfg['batt_volt_min']} but above critical {$cfg['batt_volt_crit_min']}, continue");
+	if((($battstate['cell_min'] > $cfg['batt_cell_crit_min']) && ($battstate['cell_min'] < $cfg['batt_cell_min'])) && ($state['battery_connect'] === false)) {
+		$state = log_message($state,"Battery cell voltage below minimum {$cfg['batt_cell_min']} but above critical {$cfg['batt_cell_crit_min']}, continue");
 		$state['charger_throttle'] = 1;
 		$state['inverter_throttle'] = 0;
 		$state = toggle_battery(true);
 	}
-	if($battstate['cell_min'] < $cfg['batt_volt_crit_min']) {
-		$state = log_message($state,"Battery cell voltage minimum {$cfg['batt_volt_min']} below critical {$cfg['batt_volt_crit_min']}, abort");
+	if($battstate['total'] < $cfg['batt_volt_crit_min']) {
+		$state = log_message($state,"Battery voltage {$battstate['total']} below critical {$cfg['batt_volt_crit_min']}, abort");
 		$state['charger_throttle'] = 1;
 		$state['inverter_throttle'] = 0;
 		$state = toggle_battery(false);
 	}
 
-	if((($battstate['cell_max'] < $cfg['batt_volt_crit_max']) &&  ($battstate['cell_max'] > $cfg['batt_volt_max'])) && ($state['battery_connect'] === false)){
-		$state = log_message($state,"Battery cell voltage above maximum {$cfg['batt_volt_max']} but below critical {$cfg['batt_volt_crit_max']}, continue");
+	if((($battstate['cell_max'] < $cfg['batt_cell_crit_max']) &&  ($battstate['cell_max'] > $cfg['batt_cell_max'])) && ($state['battery_connect'] === false)){
+		$state = log_message($state,"Battery cell voltage above maximum {$cfg['batt_cell_max']} but below critical {$cfg['batt_cell_crit_max']}, continue");
 		$state['charger_throttle'] = 0;
 		$state['inverter_throttle'] = 1;
 		$state = toggle_battery(true);
 	}
-	if($battstate['cell_max'] > $cfg['batt_volt_crit_max']) {
-		$state = log_message($state,"Battery cell voltage maximum {$cfg['batt_volt_max']} above critical {$cfg['batt_volt_crit_max']}, abort");
+	if($battstate['total'] > $cfg['batt_volt_crit_max']) {
+		$state = log_message($state,"Battery voltage {$battstate['total']} above critical {$cfg['batt_volt_crit_max']}, abort");
 		$state['charger_throttle'] = 0;
 		$state['inverter_throttle'] = 1;
 		$state = toggle_battery(false);
 	}
 	/* normal operating conditions */
-	if((($battstate['cell_max'] < $cfg['batt_volt_max']) && ($battstate['cell_min'] > $cfg['batt_volt_min'])) && ($state['battery_connect'] === false)) {
+	if((($battstate['cell_max'] < $cfg['batt_cell_max']) && ($battstate['cell_min'] > $cfg['batt_cell_min'])) && ($state['battery_connect'] === false)) {
 		$state = toggle_battery(true);
 	}
 	if($state['battery_connect'] === true) {
 		/* calculate charge and invert throttle based on voltage difference from maximum or minimum */
-		$state['charger_throttle'] = round((($cfg['batt_volt_max'] - $battstate['cell_max']) * 20), 2);
+		$state['charger_throttle'] = round((($cfg['batt_cell_max'] - $battstate['cell_max']) * 20), 2);
 		// $state = log_message($state, "Charge throttle is {$state['charger_throttle']}");
 		if($state['charger_throttle'] > 1)
 			$state['charger_throttle'] = 1;
@@ -396,7 +396,7 @@ function battery_status($cfg, $battstate) {
 		if($state['charger_throttle'] <= 0)
 			$state['charger_throttle'] = 0;
 
-		$state['inverter_throttle'] = round((($battstate['cell_min'] - $cfg['batt_volt_min']) * 20), 2);
+		$state['inverter_throttle'] = round((($battstate['cell_min'] - $cfg['batt_cell_min']) * 20), 2);
 		// $state = log_message($state, "Invert throttle is {$state['inverter_throttle']}");
 		if($state['inverter_throttle'] > 1)
 			$state['inverter_throttle'] = 1;
