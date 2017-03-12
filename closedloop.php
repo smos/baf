@@ -88,6 +88,7 @@ $battstate = battery_status($cfg, $battstate);
 /* write the startup state so it's live */
 write_state_shm($shm_state_id, $state);
 write_state_shm($shm_batt_id, $battstate);
+
 if($state['battery_connect'] === false)
 	log_message($state, "Something horribly wrong with the battery");
 
@@ -111,7 +112,7 @@ while($state['battery_connect']) {
 		continue;
 	}
 	// Check low battery status without generation
-	if(($p1_pow['power_gen_cur'] < $cfg['pow_gen_min']) && ($battstate['cell_min'] < $cfg['batt_volt_min'])) {
+	if(($p1_pow['power_gen_cur'] < $cfg['pow_gen_min']) && ($battstate['cell_min'] < $cfg['batt_cell_min'])) {
 		$state = log_message($state,"No generation, battery empty");
 		$state['operation'] = 0;
 		$state['charger_pwm'] = 0;
@@ -125,7 +126,7 @@ while($state['battery_connect']) {
 		continue;
 	}
 	// Check high battery status without consumption
-	if(($p1_pow['power_cons_cur'] < $cfg['pow_cons_min']) && ($battstate['cell_max'] > $cfg['batt_volt_max'])) {
+	if(($p1_pow['power_cons_cur'] < $cfg['pow_cons_min']) && ($battstate['cell_max'] > $cfg['batt_cell_max'])) {
 		$state = log_message($state,"No consumption, battery full");
 		$state['operation'] = 0;
 		$state['charger_pwm'] = 0;

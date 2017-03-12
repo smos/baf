@@ -23,11 +23,11 @@ For the webpages to be reachable you need to make a link to the www directory in
 
 - The ADC board is from ABElectronics UK. https://www.abelectronics.co.uk/ and uses i2c. The DAC board is also from AB Electronics and also uses i2c but on a different address. Luckily they have a nice library as well.
 Check out the sources from github using "cd ~/baf/;git clone https://github.com/abelectronicsuk/ABElectronics_Python_Libraries.git" 
-"sudo apt-get install python-smbus"
+"sudo apt-get install python-smbus php5-dev screen"
 "sudo adduser pi i2c"
 "sudo modprobe i2c-dev"
 "sudo modprobe i2c-bcm2708"
-Remove the modules from the module blacklist and add them to /etc/modules
+Remove the modules from the module blacklist and add them to /etc/modules, alternatively you can use raspi-config to enable these.
 "sudo nano /etc/modprobe.d/raspi-blacklist.conf"
 After reboot they should show up
 "sudo i2cdetect -y 0"
@@ -45,11 +45,15 @@ Add the following path to the .profile of the pi user.
 
 - It uses PiFace for 8 relay outputs using the PHP PiFace toolkit from https://github.com/peec/raspberry-piface-api
 Follow the instruction there and install under the ~/baf/ directory. The previous php_spi needs to work though.
-When succesful, move the vendor directory over the main directroy. "mv ~/myphppiface/vendor ~/baf"
+Make sure that you build the vendor directory and composer.json in the ~/baf/ direcory.
+
+- Add users to the groups. Add pi to the www-data group and www-data to the pi group, you can "sudo nano /etc/group"
 
 - Run the controller
 "su -l pi -c "screen -d -m -S essloop php ~/baf/closedloop.php"
-Add the command to /etc/rc.local too so that it starts on boot.
+Add the command to /etc/rc.local too so that it starts on boot, it logs to syslog.
+
+The Voltage divider is a bit finicky, as it depends on the input resistance, I adjusted the divider accordingly, my 6.8k became more like 4900.
 
 Other
 I built a PHP script to sort 18650 batteries from left to right to get mostly equal sized Ah cells for the given configuration

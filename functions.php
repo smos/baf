@@ -44,7 +44,7 @@ function write_state_shm($shm_id, $state) {
 	$string = str_pad(serialize($state), $shm_size, "\0");
 	$shm_bytes_written = shmop_write($shm_id, $string, 0);
 	if ($shm_bytes_written != strlen($string)) {
-		$state = log_message($state, "The serialized state array data is too large for shm");
+		$state = log_message($state, "The serialized state array data is too large for shm id '{$shm_id}', wrote '{$shm_bytes_written}', size is '{$shm_size}'");
 		exit(2);
 	}
 	return($state);
@@ -317,23 +317,29 @@ function get_cell_voltages($cfg, $battstate) {
 
 		}
 		$battstate['cells'] = $cells;
-	} else {
-		$cells = array();
-		exec("{$cfg['batt_cell_cmd']}", $out, $ret);
-		if($ret > 0) {
-			$state = log_message($state, "Failed to get battery cell voltages");
-			$battstate['cells'] = array();
-			return $battstate['cells'];
-		}
-		foreach($out as $line) {
-			#echo "$line\n";
-			if(!empty(trim($line))) {
-				$c_arr = explode(":", $line);
-				$cells[$c_arr[0]] = floatval(trim($c_arr[1])) * floatval($cfg['batt_voltage_div']);
-			}
-		}
-		$battstate['cells'] = $cells;
+		return $battstate['cells'];
 	}
+	$cells = array();
+	exec("{$cfg['batt_cell_cmd']}", $out, $ret);
+	if($ret > 0) {
+		$state = log_message($state, "Failed to get battery cell voltages");
+		$battstate['cells'] = array();
+		return $battstate['cells'];
+	}
+	$previous = 0;
+	foreach($out as $line) {
+		// echo "$line\n";
+		if(count($cells) >= $cfg['batt_cells'])
+			continue;
+		if(!empty(trim($line))) {
+			$c_arr = explode(":", $line);
+			$previous = array_sum($cells);
+			// $cells[$c_arr[0]] = floatval((trim($c_arr[1])) * floatval($cfg['batt_voltage_div']) - array_sum($cells));
+			$cells[$c_arr[0]] = floatval(trim($c_arr[1])) * floatval($cfg['batt_voltage_div']) - $previous;
+		}
+		// print_r($cells);
+	}
+	$battstate['cells'] = $cells;
 	return $battstate['cells'];
 }
 

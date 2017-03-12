@@ -21,7 +21,7 @@ $shm_p1_key = 0x1337;
 $shm_raw_key = 0xb33f;
 $shm_state_key = 0xd34d;
 $shm_batt_key = 0x50c4;
-$seg_size = 2048;
+$seg_size = 8192;
 
 // Serial port
 $p1_serial = "/dev/ttyUSB0";
@@ -36,16 +36,17 @@ $cfg['timer_wait'] = 60;
 
 // Battery
 $cfg['batt_dcpin'] = 6;
-$cfg['batt_volt_crit_min'] = 3.2 * 8; // Volt
-$cfg['batt_volt_crit_max'] = 4.2 * 8;
+$cfg['batt_cells'] = 8;
+$cfg['batt_volt_crit_min'] = 3.2 * $cfg['batt_cells']; // Volt
+$cfg['batt_volt_crit_max'] = 4.2 * $cfg['batt_cells'];
 $cfg['batt_cell_crit_min'] = 3.2; // Volt
 $cfg['batt_cell_crit_max'] = 4.2;
-$cfg['batt_volt_min'] = 3.45 * 8;
-$cfg['batt_volt_max'] = 4.05 * 8;
+$cfg['batt_volt_min'] = 3.45 * $cfg['batt_cells'];
+$cfg['batt_volt_max'] = 4.05 * $cfg['batt_cells'];
 $cfg['batt_cell_min'] = 3.45;
 $cfg['batt_cell_max'] = 4.05;
 $cfg['batt_cell_cmd'] = "python ~/baf/readvoltage.py";
-$cfg['batt_voltage_div'] = ((56000+6800)/6800);
+$cfg['batt_voltage_div'] = ((56000+4900)/4900);
 
 // Define dead-band Thresholds
 $cfg['pow_gen_min'] = 10; // Watts
