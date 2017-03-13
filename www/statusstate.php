@@ -211,13 +211,13 @@ echo "</td></tr>\n";
 
 echo "<tr><td colspan=3 align=center>";
 if($state['battery_connect'] === true)
-	echo UcWords($state['battery']) ."<br><img src='images/battery_ok.png' width=50>";
+	echo UcWords($state['battery']) ."<br><img src='images/battery_ok.png' width=50>&nbsp;";
 if($state['battery_connect'] === false)
-	echo "{$state['battery']}<br><img src='images/battery_nok.png' width=50>";
+	echo "{$state['battery']}<br><img src='images/battery_nok.png' width=50>&nbsp;";
 if(($state['charger_throttle'] < 1) && ($state['charger_throttle'] > 0) && ($state['battery'] == "charging"))
-	echo "<img src='images/limiter.png' width=30>";
+	echo "&nbsp;<img valign=top src='images/blimiter.png' width=50>";
 if(($state['inverter_throttle'] < 1) && ($state['inverter_throttle'] > 0) && ($state['battery'] == "discharging"))
-	echo "<img src='images/limiter.png' width=30>";
+	echo "&nbsp;<img valign=top src='images/blimiter.png' width=50>";
 echo "</td></tr>\n";
 
 echo "<!-- ";
