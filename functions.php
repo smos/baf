@@ -153,30 +153,30 @@ function controller($cfg, $state, $power, $battstate, $dev) {
 			// $state = log_message($state, "Consumption power diff = {$power_diff}, inverter power {$cur_inverter_power}");
 			/* Calculate PWM based on current diff but add current inverter power */
 			$state['inverter_power'] = round(($power_diff + $cur_inverter_power) - $cfg['pow_cons_min']);
+			$state = drive_inverters($state);
+			$state = drive_chargers($state);
+			$state['battery'] = "discharging";
 			if(($power_diff - $cfg['pow_cons_min'] + $cur_inverter_power) < $inverters['power_min']) {
 				$state['operation'] = $state['operation'] + 1;
 				$state = log_message($state,"Not enough consumption to drive the Inverter with minimum of {$inverters['power_min']} Watt moving to state {$state['operation']}");
 			}
-			$state = drive_inverters($state);
-			$state = drive_chargers($state);
-			$state['battery'] = "discharging";
 			break;
 		case -1:
 			$state[$state['operation']] = time();
+			$state = drive_inverters($state);
+			$state = drive_chargers($state);
+			$state['battery'] = "idle";
 			if($power['power_cons_cur'] > ($cfg['pow_cons_min'] + $inverters['power_min'])) {
 				$state['inverter_power'] = 0;
 				$state['duration'][$state['operation']] = $state[$state['operation']] - $state[0];
 				$state['operation'] = $state['operation'] - 1;
-				$state = log_message($state,"Consumption power {$power['power_cons_cur']} exceeding minimum of {$cfg['pow_cons_min']},  move to Invert state {$state['operation']}");
+				$state = log_message($state,"Consumption power {$power['power_cons_cur']} exceeding minimum of {$cfg['pow_cons_min']},  move to state {$state['operation']}");
 			}
 			if(($power['power_gen_cur'] > $cfg['pow_gen_min']) || ($power['power_cons_cur'] < $cfg['pow_cons_min']))  {
 				$state['duration'][$state['operation']] = $state[$state['operation']] - $state[-2];
 				$state['operation'] = $state['operation'] + 1;
 				$state = log_message($state,"We don't have enough consumption move to idle state {$state['operation']}");
 			}
-			$state = drive_inverters($state);
-			$state = drive_chargers($state);
-			$state['battery'] = "idle";
 			break;
 		case 0:
 			$state[$state['operation']] = time();
@@ -203,6 +203,9 @@ function controller($cfg, $state, $power, $battstate, $dev) {
 			break;
 		case 1:
 			$state[$state['operation']] = time();
+			$state = drive_inverters($state);
+			$state = drive_chargers($state);
+			$state['battery'] = "idle";
 			if($power['power_gen_cur'] > ($cfg['pow_gen_min'] + $chargers['power_min'])) {
 				$state['charger_power'] = 0;
 				$state['duration'][$state['operation']] = $state[$state['operation']] - $state[0];
@@ -214,9 +217,6 @@ function controller($cfg, $state, $power, $battstate, $dev) {
 				$state['operation'] = $state['operation'] - 1;
 				$state = log_message($state,"Not enough generation to start move to idle {$state['operation']}");
 			}
-			$state = drive_inverters($state);
-			$state = drive_chargers($state);
-			$state['battery'] = "idle";
 			break;
 		case 2:
 			$state[$state['operation']] = time();
@@ -226,13 +226,13 @@ function controller($cfg, $state, $power, $battstate, $dev) {
 			/* calculate how much we can drive the PWM, the actual percentage is determined in the driver */
 			$state['charger_power'] = round(($power_diff + $cur_charger_power) - $cfg['pow_gen_min']);
 			// $state = log_message($state, "Generation power diff = {$power_diff}, charger power {$cur_charger_power}");
+			$state = drive_inverters($state);
+			$state = drive_chargers($state);
+			$state['battery'] = "charging";
 			if(($power_diff - $cfg['pow_gen_min'] + $cur_charger_power) < $chargers['power_min']) {
 				$state['operation'] = $state['operation'] - 1;
 				$state = log_message($state,"Not enough generation to drive the Charger with minium of {$chargers['power_min']} Watt  moving to state {$state['operation']}");
 			}
-			$state = drive_inverters($state);
-			$state = drive_chargers($state);
-			$state['battery'] = "charging";
 			break;
 	}
 	//sleep(0.5);
@@ -515,20 +515,21 @@ function power_device_ac($cfg, $state, $category, $idx, $toggle) {
 		}
 
 		if(((time() - $statetime) > $cfg[$category][$idx]['standby'])  && ($state[$category][$idx]['ac'] === true)) {
-			$state = log_message($state, "Power off {$category} {$idx} AC after standby time ".(time() - $state[2])." exceeds {$cfg[$category][$idx]['standby']}");
+			$state = log_message($state, "Disable {$category} index {$idx} AC after standby time ".(time() - $state[2])." exceeds {$cfg[$category][$idx]['standby']}");
 			$dev->getLeds()[$cfg[$category][$idx]['acpin']]->turnOff();
 			$dev->getOutputPins()[$cfg[$category][$idx]['acpin']]->turnOff();
 			$state[$category][$idx]['ac'] = false;
 		}
 		if((((time() - $dstatetime) > $cfg[$category][$idx]['standby'])  && ($state[$category][$idx]['ac'] === true)) && ($dstatetime > 0)) {
-			$state = log_message($state, "Power off Idle {$category} {$idx} AC after standby time ".(time() - $state[$category][$idx]['time'])." exceeds {$cfg[$category][$idx]['standby']}");
+			$state = log_message($state, "Disable {$category} index {$idx} AC after standby time ".(time() - $state[$category][$idx]['time'])." exceeds {$cfg[$category][$idx]['standby']}");
 			$dev->getLeds()[$cfg[$category][$idx]['acpin']]->turnOff();
 			$dev->getOutputPins()[$cfg[$category][$idx]['acpin']]->turnOff();
 			$state[$category][$idx]['ac'] = false;
 		}
 	}
 	/* Let's go */
-	if($toggle > 0) {
+	if(($toggle > 0) && ($state[$category][$idx]['ac'] === false)) {
+		$state = log_message($state,"Enable {$category} index $idx AC");
 		$dev->getLeds()[$cfg[$category][$idx]['acpin']]->turnOn();
 		$dev->getOutputPins()[$cfg[$category][$idx]['acpin']]->turnOn();
 		$state[$category][$idx]['ac'] = true;
@@ -539,16 +540,22 @@ function power_device_ac($cfg, $state, $category, $idx, $toggle) {
 
 function power_device_dc($cfg, $state, $category, $idx, $pwm) {
 	global $dev;
-	if($pwm == 0) {
-		$dev->getLeds()[$cfg[$category][$idx]['dcpin']]->turnOff();
-		$dev->getOutputPins()[$cfg[$category][$idx]['dcpin']]->turnOff();
-		$state[$category][$idx]['dc'] = false;
+	if(($pwm == 0)){
+		if($state[$category][$idx]['dc'] === true) {
+			$state = log_message($state,"Disable {$category} index $idx DC");
+			$dev->getLeds()[$cfg[$category][$idx]['dcpin']]->turnOff();
+			$dev->getOutputPins()[$cfg[$category][$idx]['dcpin']]->turnOff();
+			$state[$category][$idx]['dc'] = false;
+		}
 		$state[$category][$idx]['pwm'] = $pwm;
 	}
-	if($pwm > 0) {
-		$dev->getLeds()[$cfg[$category][$idx]['dcpin']]->turnOn();
-		$dev->getOutputPins()[$cfg[$category][$idx]['dcpin']]->turnOn();
-		$state[$category][$idx]['dc'] = true;
+	if(($pwm > 0)){
+		if($state[$category][$idx]['dc'] === false) {
+			$state = log_message($state,"Enable {$category} index $idx DC");
+			$dev->getLeds()[$cfg[$category][$idx]['dcpin']]->turnOn();
+			$dev->getOutputPins()[$cfg[$category][$idx]['dcpin']]->turnOn();
+			$state[$category][$idx]['dc'] = true;
+		}
 		$state[$category][$idx]['pwm'] = $pwm;
 		$state[$category][$idx]['time'] = time();
 	}

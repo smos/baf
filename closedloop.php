@@ -113,7 +113,8 @@ while($state['battery_connect']) {
 	}
 	// Check low battery status without generation
 	if(($p1_pow['power_gen_cur'] < $cfg['pow_gen_min']) && ($battstate['cell_min'] < $cfg['batt_cell_min'])) {
-		$state = log_message($state,"No generation, battery empty");
+		if($state['battery'] != "empty")
+			$state = log_message($state,"No generation, battery empty");
 		$state['operation'] = 0;
 		$state['charger_pwm'] = 0;
 		$state['inverter_pwm'] = 0;
@@ -127,7 +128,8 @@ while($state['battery_connect']) {
 	}
 	// Check high battery status without consumption
 	if(($p1_pow['power_cons_cur'] < $cfg['pow_cons_min']) && ($battstate['cell_max'] > $cfg['batt_cell_max'])) {
-		$state = log_message($state,"No consumption, battery full");
+		if($state['battery'] != "full")
+			$state = log_message($state,"No consumption, battery full");
 		$state['operation'] = 0;
 		$state['charger_pwm'] = 0;
 		$state['inverter_pwm'] = 0;
