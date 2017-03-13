@@ -545,6 +545,7 @@ function power_device_dc($cfg, $state, $category, $idx, $pwm) {
 			$state = log_message($state,"Disable {$category} index $idx DC");
 			$dev->getLeds()[$cfg[$category][$idx]['dcpin']]->turnOff();
 			$dev->getOutputPins()[$cfg[$category][$idx]['dcpin']]->turnOff();
+			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 			$state[$category][$idx]['dc'] = false;
 		}
 		$state[$category][$idx]['pwm'] = $pwm;
@@ -554,6 +555,7 @@ function power_device_dc($cfg, $state, $category, $idx, $pwm) {
 			$state = log_message($state,"Enable {$category} index $idx DC");
 			$dev->getLeds()[$cfg[$category][$idx]['dcpin']]->turnOn();
 			$dev->getOutputPins()[$cfg[$category][$idx]['dcpin']]->turnOn();
+			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 			$state[$category][$idx]['dc'] = true;
 		}
 		$state[$category][$idx]['pwm'] = $pwm;
@@ -628,6 +630,24 @@ function drive_inverters($state) {
 			break;
 	}
 	return($state);
+}
+
+function drive_pwm($cfg, $channel, $pwm) {
+	if(($channel > 16) || ($channel < 0) || (!is_numeric($channel))) {
+		$state = log_message($state,"We are passed an invalid channel '{$channel}'");
+		return false;
+	}
+	if(($pwm > 1) || ($pwm < 0) || (!is_numeric($pwm))) {
+		$state = log_message($state,"We are passed an invalid pwm value '{$pwm}'");
+		return false;
+	}
+
+	$pwmstep = round($pwm * 4096);
+	exec("{$cfg['pwm_command']} {$channel} {$pwmstep}", $out, $ret);
+	if($ret > 0)
+		$state = log_message($state,"Failed to set pwm to $pwm channel $channel");
+	if(count($out) > 0)
+		$state = log_message($state,"We got unexpected results $out");
 }
 
 function shutdown() {

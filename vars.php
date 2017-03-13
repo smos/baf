@@ -51,25 +51,27 @@ $cfg['batt_voltage_div'] = ((56000+4900)/4900);
 // Define dead-band Thresholds
 $cfg['pow_gen_min'] = 10; // Watts
 $cfg['pow_cons_min'] = 10;
-
+$cfg['pwm_command'] = "python ~/baf/drive-pwm.py";
 // Set PWM limits for our charger and inverter, depends on the battery
 $cfg['inverters'][1]['pwm_min'] = 20; // Percent
 $cfg['inverters'][1]['pwm_max'] = 100;
-$cfg['inverters'][1]['power'] = 240; // Watts
+$cfg['inverters'][1]['pwm_channel'] = 1;
+$cfg['inverters'][1]['power'] = 500; // Watts
 $cfg['inverters'][1]['acpin'] = 0;
 $cfg['inverters'][1]['dcpin'] = 1;
 $cfg['inverters'][1]['standby'] = 300;
 /*
-$cfg['inverters'][2]['pwm_min'] = 5; // Percent
+$cfg['inverters'][2]['pwm_min'] = 20; // Percent
 $cfg['inverters'][2]['pwm_max'] = 100;
-$cfg['inverters'][2]['power'] = 240; // Watts
-$cfg['inverters'][2]['acpin'] = 2;
-$cfg['inverters'][2]['dcpin'] = 3;
-$cfg['inverters'][2]['standby'] = 120;
+$cfg['inverters'][2]['power'] = 500; // Watts
+$cfg['inverters'][2]['acpin'] = 5;
+$cfg['inverters'][2]['dcpin'] = 6;
+$cfg['inverters'][2]['standby'] = 300;
 */
 $cfg['chargers'][1]['pwm_min'] = 20; // Percent
 $cfg['chargers'][1]['pwm_max'] = 100;
-$cfg['chargers'][1]['power'] = 185; // Watts
+$cfg['chargers'][1]['pwm_channel'] = 2;
+$cfg['chargers'][1]['power'] = 320; // Watts
 $cfg['chargers'][1]['acpin'] = 2;
 $cfg['chargers'][1]['dcpin'] = 3;
 $cfg['chargers'][1]['standby'] = 60;
