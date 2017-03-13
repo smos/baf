@@ -46,6 +46,11 @@ echo "</td></tr>";
 
 echo "<tr><td align=center colspan=3 >";
 echo "<table border=0 width=300>\n";
+if((time() - $p1_array['time']) > 30)
+	echo "<tr><td colspan=2 >Last Reading</td><td bgcolor=coral>". date("H:i:s", $p1_array['time']) ."</td></tr>\n";
+else
+	echo "<tr><td colspan=2 >Last Reading</td><td bgcolor=lightgreen>". date("H:i:s", $p1_array['time']) ."</td></tr>\n";
+
 echo "<tr><td colspan=2>Consumption Tarif 1</td><td>{$p1_array['energy_cons_1']} kWh</td></tr>\n";
 echo "<tr><td colspan=2>Consumption Tarif 2</td><td>{$p1_array['energy_cons_2']} kWh</td></tr>\n";
 echo "<tr><td colspan=2>Generation Tarif 1</td><td>{$p1_array['energy_gen_1']} kWh</td></tr>\n";
@@ -54,11 +59,9 @@ echo "<tr><td colspan=2>Consumption Gas</td><td>{$p1_array['gas_cons']} m&sup3;<
 echo "</table>";
 echo "</td></tr>";
 
-/*
-echo "<tr><td colspan=3><pre>";
+echo "<!-- ";
 echo "The data inside P1 shared memory is: " . print_r($p1_array, true) . "\n";
-echo "</pre></td></tr>";
-*/
+echo " -->";
 
 echo "</table>";
 

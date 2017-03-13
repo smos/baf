@@ -23,8 +23,8 @@ include("functions.php");
 $shm_batt_id = open_shm($shm_batt_key, $seg_size, "a");
 $batt_array = unserialize(rtrim(shmop_read($shm_batt_id, 0, $seg_size), "\0"));
 
-echo "<table id='statusbatt' width=500>";
-echo "<tr><td align=center colspan=3 width=300>Battery ". sprintf("%1.2f", $batt_array['total']) ." Volt</td><td width=180>&nbsp;</td></tr>\n";
+echo "<table id='statusbatt' width=300 border=0>";
+echo "<tr><td align=center colspan=3 >Battery ". sprintf("%1.2f", $batt_array['total']) ." Volt</td></tr>\n";
 echo "<tr><td align=center colspan=3 >";
 echo "<table border=0 cellspacing=2 cellpadding=0><tr>\n";
 echo "<td width=40><center><font size='3'>{$batt_array['level']}%</td><td bgcolor=white width=10>&nbsp;</td>";
@@ -44,7 +44,7 @@ foreach($batt_array['cells'] as $cell) {
 	echo "<td width=40 height=100 valign=bottom style='border: 1px solid black;'><table><tr><td bgcolor={$bgcolor} height={$height} width=50></td></tr></table> </td>";
 }
 echo "</tr></table>";
-echo "</td><td>&nbsp;</td></tr>";
+echo "</td></tr>";
 
 echo "<!-- ";
 echo "The array contains:\n" . print_r($batt_array, true) . "\n";

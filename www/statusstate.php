@@ -22,7 +22,7 @@ include("functions.php");
 $shm_state_id = open_shm($shm_state_key, $seg_size, "a");
 $state = unserialize(rtrim(shmop_read($shm_state_id, 0, $seg_size), "\0"));
 
-echo "<table id='statusstate' border=0 width=500>";
+echo "<table id='statusstate' border=0 width=300>";
 echo "<tr><td align=right width=100 valign=top>";
 switch($state['operation']) {
 	case 2:
@@ -34,6 +34,13 @@ switch($state['operation']) {
 	case -1:
 	case 0:
 	case 1:
+		if($state['available_power'] > 0)
+			echo "<img src=images/grid_generation.png height=30>&nbsp;";
+		if($state['available_power'] < 0)
+			echo "<img src=images/grid_consumption.png height=30>&nbsp;";
+		if($state['available_power'] == 0)
+			echo "<img src=images/grid_idle.png height=30>&nbsp;";
+
 		if($state['available_power'] > 0)
 			echo "<img src=images/p1_generation2.png height=30>";
 		if($state['available_power'] < 0)
@@ -76,8 +83,17 @@ switch($state['operation']) {
 			echo "<img src=images/p1_consumption2.png height=30>";
 		if($state['available_power'] == 0)
 			echo "<img src=images/batt_idle.png height=30>";
+
+		if($state['available_power'] > 0)
+			echo "&nbsp;<img src=images/house_generation.png height=30>";
+		if($state['available_power'] < 0)
+			echo "&nbsp;<img src=images/house_consumption.png height=30>";
+		if($state['available_power'] == 0)
+			echo "&nbsp;<img src=images/house_idle.png height=30>";
+
 		break;
 }
+/*
 echo "</td><td align=center width=200 valign=top>";
 switch($state['operation']) {
 	case -2:
@@ -93,6 +109,7 @@ switch($state['operation']) {
 			echo "<img src=images/house_idle.png height=30>";
 		break;
 }
+*/
 echo "</td></tr>\n";
 
 echo "<tr><td align=right width=100 height=30 valign=top>&nbsp;";
@@ -209,7 +226,7 @@ echo "</td></tr>\n";
 echo "</table>\n";
 echo "</td></tr>\n";
 
-echo "<tr><td colspan=3 align=center>";
+echo "<tr><td colspan=2 align=center>";
 if($state['battery_connect'] === true)
 	echo UcWords($state['battery']) ."<br><img src='images/battery_ok.png' width=50>&nbsp;";
 if($state['battery_connect'] === false)
@@ -220,10 +237,18 @@ if(($state['inverter_throttle'] < 1) && ($state['inverter_throttle'] > 0) && ($s
 	echo "&nbsp;<img valign=top src='images/blimiter.png' width=50>";
 echo "</td></tr>\n";
 
+if((time() - $state['time']) > 10)
+	echo "<tr><td >Timeout</td><td bgcolor=coral>". date("H:i:s", $state['time']) ."</td></tr>\n";
+else
+	echo "<tr><td >Running</td><td bgcolor=lightgreen>". date("H:i:s", $state['time']) ."</td></tr>\n";
+
+echo "<tr><td colspan=2 ><font size=2>{$state['message_time']} | {$state['message']}</font></td></tr>\n";
+
+echo "</table>";
+
 echo "<!-- ";
 echo "The status array contains:\n" . print_r($state, true) . "\n";
 echo "-->";
 
-echo "</table>";
 
 ?>
