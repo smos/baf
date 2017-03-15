@@ -288,7 +288,7 @@ function get_cell_voltages($cfg, $battstate) {
 	global $state;
 	global $dev;
 	/* pretend a dry run with simulate and previous battstate */
-	if($state['simulate']) {
+	if($cfg['simulate']) {
 		if($state['battery'] == "") {
 			$cells[1] = 3.95;
 			$cells[2] = 3.96;
@@ -305,13 +305,13 @@ function get_cell_voltages($cfg, $battstate) {
 			case 2:
 				/* pretend we are charging */
 				foreach($cells as $idx => $cell) {
-					$cells[$idx] = $cell +0.001;
+					$cells[$idx] = $cell + $cfg['simulate_step'];
 				}
 				break;
 			case -2:
 				/* pretend we are discharging */
 				foreach($cells as $idx => $cell) {
-					$cells[$idx] = $cell -0.001;
+					$cells[$idx] = $cell - $cfg['simulate_step'];
 				}
 				break;
 
@@ -393,7 +393,7 @@ function battery_status($cfg, $battstate) {
 	}
 	if($state['battery_connect'] === true) {
 		/* calculate charge and invert throttle based on voltage difference from maximum or minimum */
-		$state['charger_throttle'] = round((($cfg['batt_cell_max'] - $battstate['cell_max']) * 20), 2);
+		$state['charger_throttle'] = round((($cfg['batt_cell_max'] - ($battstate['cell_max'] - $cfg['batt_hysteresis'])) * $cfg['batt_charge_taper']), 2);
 		// $state = log_message($state, "Charge throttle is {$state['charger_throttle']}");
 		if($state['charger_throttle'] > 1)
 			$state['charger_throttle'] = 1;
@@ -402,7 +402,7 @@ function battery_status($cfg, $battstate) {
 		if($state['charger_throttle'] <= 0)
 			$state['charger_throttle'] = 0;
 
-		$state['inverter_throttle'] = round((($battstate['cell_min'] - $cfg['batt_cell_min']) * 20), 2);
+		$state['inverter_throttle'] = round(((($battstate['cell_min'] + $cfg['batt_hystersis'])- $cfg['batt_cell_min']) * $cfg['batt_discharge_taper']), 2);
 		// $state = log_message($state, "Invert throttle is {$state['inverter_throttle']}");
 		if($state['inverter_throttle'] > 1)
 			$state['inverter_throttle'] = 1;
@@ -643,6 +643,12 @@ function drive_pwm($cfg, $channel, $pwm) {
 	}
 
 	$pwmstep = round($pwm * 4096);
+	if($pwmstep == 0)
+		$pwmstep = 1;
+	if($pwmstep == 4096)
+		$pwmstep = 4095;
+
+	$state = log_message($state,"Set pwm to $pwm, step $pwmstep channel $channel");
 	exec("{$cfg['pwm_command']} {$channel} {$pwmstep}", $out, $ret);
 	if($ret > 0)
 		$state = log_message($state,"Failed to set pwm to $pwm channel $channel");

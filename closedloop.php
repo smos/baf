@@ -60,7 +60,6 @@ $state['inverter_power'] = 0;
 $state['inverter_throttle'] = 0;
 $state['battery'] = "";
 $state['battery_connect'] = false;
-$state['simulate'] = true;
 $state['message'] = "Starting up";
 $state['message_time'] = date("Y-m-d H:i:s");
 foreach($cfg['inverters'] as $idx => $inverter) {
@@ -99,6 +98,11 @@ while($state['battery_connect']) {
 	$battstate = battery_status($cfg, $battstate);
 	write_state_shm($shm_batt_id, $battstate);
 	$state['available_power'] = 0 + $p1_pow['power_gen_cur'] - $p1_pow['power_cons_cur'];
+	$batt_hysteresis = 0;
+	// If charging or discharging we need to apply hysteresis
+	if(($state['operation'] == 2) || ($state['operation'] == -2))
+		$batt_hysteresis = $cfg['batt_hysteresis'];
+
 	if((time() - $p1_pow['time']) > 30) {
 		$state = log_message($state,"Sensor is atleast 30 seconds out of date, disable charger(s) and inverter(s)");
 		$state['operation'] = 0;
@@ -112,7 +116,7 @@ while($state['battery_connect']) {
 		continue;
 	}
 	// Check low battery status without generation
-	if(($p1_pow['power_gen_cur'] < $cfg['pow_gen_min']) && ($battstate['cell_min'] < $cfg['batt_cell_min'])) {
+	if(($p1_pow['power_gen_cur'] < $cfg['pow_gen_min']) && (($battstate['cell_min'] + $batt_hysteresis)< $cfg['batt_cell_min'])) {
 		if($state['battery'] != "empty")
 			$state = log_message($state,"No generation, battery empty");
 		$state['operation'] = 0;
@@ -127,7 +131,7 @@ while($state['battery_connect']) {
 		continue;
 	}
 	// Check high battery status without consumption
-	if(($p1_pow['power_cons_cur'] < $cfg['pow_cons_min']) && ($battstate['cell_max'] > $cfg['batt_cell_max'])) {
+	if(($p1_pow['power_cons_cur'] < $cfg['pow_cons_min']) && (($battstate['cell_max'] - $batt_hysteresis) > $cfg['batt_cell_max'])) {
 		if($state['battery'] != "full")
 			$state = log_message($state,"No consumption, battery full");
 		$state['operation'] = 0;
