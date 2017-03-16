@@ -154,7 +154,7 @@ function controller($cfg, $state, $power, $battstate, $dev) {
 			/* Calculate PWM based on current diff but add current inverter power */
 			$state['inverter_power'] = round(($power_diff + $cur_inverter_power) - $cfg['pow_cons_min']);
 			$state = drive_inverters($state);
-			$state = drive_chargers($state);
+			// $state = drive_chargers($state);
 			$state['battery'] = "discharging";
 			if(($power_diff - $cfg['pow_cons_min'] + $cur_inverter_power) < $inverters['power_min']) {
 				$state['operation'] = $state['operation'] + 1;
@@ -226,7 +226,7 @@ function controller($cfg, $state, $power, $battstate, $dev) {
 			/* calculate how much we can drive the PWM, the actual percentage is determined in the driver */
 			$state['charger_power'] = round(($power_diff + $cur_charger_power) - $cfg['pow_gen_min']);
 			// $state = log_message($state, "Generation power diff = {$power_diff}, charger power {$cur_charger_power}");
-			$state = drive_inverters($state);
+			// $state = drive_inverters($state);
 			$state = drive_chargers($state);
 			$state['battery'] = "charging";
 			if(($power_diff - $cfg['pow_gen_min'] + $cur_charger_power) < $chargers['power_min']) {
@@ -551,22 +551,27 @@ function power_device_dc($cfg, $state, $category, $idx, $pwm) {
 		if($state[$category][$idx]['dc'] === true) {
 			$state = log_message($state,"Disable {$category} index $idx DC");
 			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
+			sleep(0.1);
 			$dev->getLeds()[$cfg[$category][$idx]['dcpin']]->turnOff();
 			$dev->getOutputPins()[$cfg[$category][$idx]['dcpin']]->turnOff();
 			$state[$category][$idx]['dc'] = false;
 		}
-		drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
+		if($state[$category][$idx]['pwm'] != $pwm)
+			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 		$state[$category][$idx]['pwm'] = $pwm;
+		$state[$category][$idx]['time'] = time();
 	}
 	if(($pwm > 0)){
 		if($state[$category][$idx]['dc'] === false) {
 			$state = log_message($state,"Enable {$category} index $idx DC");
 			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
+			sleep(0.1);
 			$dev->getLeds()[$cfg[$category][$idx]['dcpin']]->turnOn();
 			$dev->getOutputPins()[$cfg[$category][$idx]['dcpin']]->turnOn();
 			$state[$category][$idx]['dc'] = true;
 		}
-		drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
+		if($state[$category][$idx]['pwm'] != $pwm)
+			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 		$state[$category][$idx]['pwm'] = $pwm;
 		$state[$category][$idx]['time'] = time();
 	}
@@ -642,6 +647,7 @@ function drive_inverters($state) {
 }
 
 function drive_pwm($cfg, $channel, $pwm) {
+	global $state;
 	if(($channel > 16) || ($channel < 0) || (!is_numeric($channel))) {
 		$state = log_message($state,"We are passed an invalid channel '{$channel}'");
 		return false;
@@ -675,6 +681,8 @@ function shutdown() {
 	$state['charger_power'] = 0;
 	$state['inverter_power'] = 0;
 	$state['available_power'] = 0;
+	$state['duration'][2] = time();
+	$state['duration'][-2] = time();
 	write_state_shm($shm_state_id, $state);
 	foreach($cfg['inverters'] as $idx => $inverter) {
 		$state = power_device_ac($cfg, $state, "inverters", $idx, 0);
