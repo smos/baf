@@ -92,7 +92,7 @@ if($state['battery_connect'] === false)
 	log_message($state, "Something horribly wrong with the battery");
 
 // Enter closed loop
-while($state['battery_connect']) {
+while(true) {
 	// Check if the sensor is current atleast
 	$p1_pow = read_p1_shm($shm_p1_key, $seg_size);
 	$battstate = battery_status($cfg, $battstate);
@@ -111,6 +111,8 @@ while($state['battery_connect']) {
 		$state['available_power'] = 0;
 		$state = drive_inverters($state);
 		$state = drive_chargers($state);
+		if((time() - $state[0]) > $cfg['batt_timeout'])
+			toggle_battery(false);
 		write_state_shm($shm_state_id, $state);
 		sleep($cfg['timer_loop']);
 		continue;
@@ -126,6 +128,8 @@ while($state['battery_connect']) {
 		$state = drive_inverters($state);
 		$state = drive_chargers($state);
 		$state['available_power'] = 0 + $p1_pow['power_gen_cur'] - $p1_pow['power_cons_cur'];
+		if((time() - $state[0]) > $cfg['batt_timeout'])
+			toggle_battery(false);
 		write_state_shm($shm_state_id, $state);
 		sleep($cfg['timer_loop']);
 		continue;
@@ -141,6 +145,8 @@ while($state['battery_connect']) {
 		$state = drive_inverters($state);
 		$state = drive_chargers($state);
 		$state['available_power'] = 0 + $p1_pow['power_gen_cur'] - $p1_pow['power_cons_cur'];
+		if((time() - $state[0]) > $cfg['batt_timeout'])
+			toggle_battery(false);
 		write_state_shm($shm_state_id, $state);
 		sleep($cfg['timer_loop']);
 		continue;

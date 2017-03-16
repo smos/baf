@@ -31,7 +31,7 @@ function open_shm($shm_key, $seg_size, $mode) {
 function close_shm ($shm_id) {
 	global $state;
 	//Now lets delete the block and close the shared memory segment
-	if (!@shmop_delete($shm_id)) {
+	if (!shmop_delete($shm_id)) {
 		$state = log_message($state, "Couldn't mark shared memory block for deletion.");
 	}
 	shmop_close($shm_id);
@@ -366,30 +366,37 @@ function battery_status($cfg, $battstate) {
 		$state = log_message($state,"Battery cell voltage below minimum {$cfg['batt_cell_min']} but above critical {$cfg['batt_cell_crit_min']}, continue");
 		$state['charger_throttle'] = 1;
 		$state['inverter_throttle'] = 0;
-		$state = toggle_battery(true);
+		if($state['operation'] <> 0)
+			$state = toggle_battery(true);
 	}
 	if($battstate['total'] < $cfg['batt_volt_crit_min']) {
 		$state = log_message($state,"Battery voltage {$battstate['total']} below critical {$cfg['batt_volt_crit_min']}, abort");
-		$state['charger_throttle'] = 1;
+		$state['charger_throttle'] = 0;
 		$state['inverter_throttle'] = 0;
 		$state = toggle_battery(false);
+		shutdown();
+		return($battstate);
 	}
 
 	if((($battstate['cell_max'] < $cfg['batt_cell_crit_max']) &&  ($battstate['cell_max'] > $cfg['batt_cell_max'])) && ($state['battery_connect'] === false)){
 		$state = log_message($state,"Battery cell voltage above maximum {$cfg['batt_cell_max']} but below critical {$cfg['batt_cell_crit_max']}, continue");
 		$state['charger_throttle'] = 0;
 		$state['inverter_throttle'] = 1;
-		$state = toggle_battery(true);
+		if($state['operation'] <> 0)
+			$state = toggle_battery(true);
 	}
 	if($battstate['total'] > $cfg['batt_volt_crit_max']) {
 		$state = log_message($state,"Battery voltage {$battstate['total']} above critical {$cfg['batt_volt_crit_max']}, abort");
 		$state['charger_throttle'] = 0;
-		$state['inverter_throttle'] = 1;
+		$state['inverter_throttle'] = 0;
 		$state = toggle_battery(false);
+		shutdown();
+		return($battstate);
 	}
 	/* normal operating conditions */
-	if((($battstate['cell_max'] < $cfg['batt_cell_max']) && ($battstate['cell_min'] > $cfg['batt_cell_min'])) && ($state['battery_connect'] === false)) {
-		$state = toggle_battery(true);
+	if((($battstate['cell_max'] < $cfg['batt_cell_max']) && ($battstate['cell_min'] > $cfg['batt_cell_min'])) && ($state['battery_connect'] === false) && ($state['operation'] <> 0)) {
+		if($state['operation'] <> 0)
+			$state = toggle_battery(true);
 	}
 	if($state['battery_connect'] === true) {
 		/* calculate charge and invert throttle based on voltage difference from maximum or minimum */
@@ -543,21 +550,23 @@ function power_device_dc($cfg, $state, $category, $idx, $pwm) {
 	if(($pwm == 0)){
 		if($state[$category][$idx]['dc'] === true) {
 			$state = log_message($state,"Disable {$category} index $idx DC");
+			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 			$dev->getLeds()[$cfg[$category][$idx]['dcpin']]->turnOff();
 			$dev->getOutputPins()[$cfg[$category][$idx]['dcpin']]->turnOff();
-			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 			$state[$category][$idx]['dc'] = false;
 		}
+		drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 		$state[$category][$idx]['pwm'] = $pwm;
 	}
 	if(($pwm > 0)){
 		if($state[$category][$idx]['dc'] === false) {
 			$state = log_message($state,"Enable {$category} index $idx DC");
+			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 			$dev->getLeds()[$cfg[$category][$idx]['dcpin']]->turnOn();
 			$dev->getOutputPins()[$cfg[$category][$idx]['dcpin']]->turnOn();
-			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 			$state[$category][$idx]['dc'] = true;
 		}
+		drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 		$state[$category][$idx]['pwm'] = $pwm;
 		$state[$category][$idx]['time'] = time();
 	}
@@ -661,13 +670,12 @@ function shutdown() {
 	global $cfg;
 	global $shm_state_id;
 	global $state;
-	$state = log_message($state,"Shutdown, move to state 0, disable charger and inverter. Disconnect Battery. Delete Shm");
+	$state = log_message($state,"Shutdown, move to state 0, disable charger(s) and inverter(s). Disconnect Battery. Reset IO.");
 	$state['operation'] = 0;
 	$state['charger_power'] = 0;
 	$state['inverter_power'] = 0;
 	$state['available_power'] = 0;
-	drive_inverters($state);
-	drive_chargers($state);
+	write_state_shm($shm_state_id, $state);
 	foreach($cfg['inverters'] as $idx => $inverter) {
 		$state = power_device_ac($cfg, $state, "inverters", $idx, 0);
 		$state = power_device_dc($cfg, $state, "inverters", $idx, 0);
@@ -676,15 +684,16 @@ function shutdown() {
 		$state = power_device_ac($cfg, $state, "chargers", $idx, 0);
 		$state = power_device_dc($cfg, $state, "chargers", $idx, 0);
 	}
-	sleep($cfg['timer_loop']);
+	drive_inverters($state);
+	drive_chargers($state);
 	write_state_shm($shm_state_id, $state);
+	sleep($cfg['timer_loop']);
 	toggle_battery(false);
-	write_state_shm($shm_state_id, $state);
-	sleep($cfg['timer_loop']);
-	write_state_shm($shm_state_id, $state);
-	close_shm($shm_state_id);
 	// reset gpio
 	$dev->init();
+	write_state_shm($shm_state_id, $state);
+	sleep($cfg['timer_loop']);
+	write_state_shm($shm_state_id, $state);
 	exit(0);
 }
 

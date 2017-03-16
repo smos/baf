@@ -35,7 +35,7 @@ $cfg['timer_loop'] = 3;
 $cfg['timer_wait'] = 60;
 
 // Simulate a battery
-$cfg['simulate'] = false;
+$cfg['simulate'] = true;
 $cfg['simulate_step'] = 0.01;
 $cfg['batt_cells'] = 8;
 
@@ -52,10 +52,12 @@ $cfg['batt_volt_max'] = 4.05 * $cfg['batt_cells'];
 $cfg['batt_cell_min'] = 3.45;
 $cfg['batt_cell_max'] = 4.05;
 $cfg['batt_cell_cmd'] = "python ~/baf/readvoltage.py";
-$cfg['batt_voltage_div'] = ((56000+4900)/4900);
+//$cfg['batt_voltage_div'] = ((110000+6800)/6800);
+$cfg['batt_voltage_div'] = 6.9569;
 $cfg['batt_charge_taper'] = 20; // percent
 $cfg['batt_discharge_taper'] = 20; //percent
 $cfg['batt_hysteresis'] = 0.1; // Volt
+$cfg['batt_timeout'] = 60;
 
 // Define dead-band Thresholds
 $cfg['pow_gen_min'] = 10; // Watts
