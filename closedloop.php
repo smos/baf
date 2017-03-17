@@ -62,6 +62,7 @@ $state['battery'] = "";
 $state['battery_connect'] = false;
 $state['message'] = "Starting up";
 $state['message_time'] = date("Y-m-d H:i:s");
+$state['maintenance'] = false;
 foreach($cfg['inverters'] as $idx => $inverter) {
 	$state['inverters'][$idx]['ac'] = false;
 	$state['inverters'][$idx]['dc'] = false;
@@ -88,9 +89,6 @@ $battstate = battery_status($cfg, $battstate);
 write_state_shm($shm_state_id, $state);
 write_state_shm($shm_batt_id, $battstate);
 
-if($state['battery_connect'] === false)
-	log_message($state, "Something horribly wrong with the battery");
-
 // Enter closed loop
 while(true) {
 	// Check if the sensor is current atleast
@@ -103,6 +101,7 @@ while(true) {
 	if(($state['operation'] == 2) || ($state['operation'] == -2))
 		$batt_hysteresis = $cfg['batt_hysteresis'];
 
+	/* halt everything on out of date sensor, but don't quit */
 	if((time() - $p1_pow['time']) > 30) {
 		$state = log_message($state,"Sensor is atleast 30 seconds out of date, disable charger(s) and inverter(s)");
 		$state['operation'] = 0;
@@ -145,6 +144,8 @@ while(true) {
 		$state = drive_inverters($state);
 		$state = drive_chargers($state);
 		$state['available_power'] = 0 + $p1_pow['power_gen_cur'] - $p1_pow['power_cons_cur'];
+		/* do we need to maintenance charge? Only with generation after we are done with normal charging */
+		$state = maintenance_charge($cfg, $battstate, $state);
 		if((time() - $state[0]) > $cfg['batt_timeout'])
 			toggle_battery(false);
 		write_state_shm($shm_state_id, $state);

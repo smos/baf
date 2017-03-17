@@ -1,6 +1,4 @@
-<?php
-/*
-Copyright 2017 Seth Mos <seth.mos@dds.nl>
+<?php /* Copyright 2017 Seth Mos <seth.mos@dds.nl>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -715,4 +713,32 @@ function log_message($state = array(), $message = "") {
 	$state['message_time'] = "{$date}";
 	return $state;
 }
+
+function maintenance_charge($cfg, $battstate, $state) {
+	global $dev;
+	$state[$state['operation']] = time();
+	if(($state['operation'] <> 0) && ($state['maintenance'] === true)) {
+		$state = log_message($state,"Disable maintenance charger");
+		$state['maintenance'] = false;
+		$dev->getLeds()[$cfg['maintenance_charger_acpin']]->turnOff();
+		$dev->getOutputPins()[$cfg['maintenance_charger_acpin']]->turnOff();
+	}
+	$cell_diff = ($battstate['cell_max'] - $battstate[$cell_min]);
+	if(($cell_diff > $cfg['maintenance_diff']) && ($state['maintenance'] === false)) {
+		$state = log_message($state,"Enable maintenance charger,  cell difference'{$cell_diff}' exceeds '{$cfg['maintenance_diff']}' limit.");
+		$state['maintenance'] = true;
+		$dev->getLeds()[$cfg['maintenance_charger_acpin']]->turnOn();
+		$dev->getOutputPins()[$cfg['maintenance_charger_acpin']]->turnOn();
+
+	}
+	if(($cell_diff < $cfg['batt_hysteresis']) && ($state['maintenance'] === true)) {
+		$state = log_message($state,"Disable maintenance charger,  cell difference'{$cell_diff}' within hysteresis '{$cfg['batt_hysteresis']}'.");
+		$state['maintenance'] = false;
+		$dev->getLeds()[$cfg['maintenance_charger_acpin']]->turnOff();
+		$dev->getOutputPins()[$cfg['maintenance_charger_acpin']]->turnOff();
+
+	}
+	return $state;
+}
+
 ?>
