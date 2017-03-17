@@ -361,7 +361,8 @@ function battery_status($cfg, $battstate) {
 
 
 	if((($battstate['cell_min'] > $cfg['batt_cell_crit_min']) && ($battstate['cell_min'] < $cfg['batt_cell_min'])) && ($state['battery_connect'] === false)) {
-		$state = log_message($state,"Battery cell voltage below minimum {$cfg['batt_cell_min']} but above critical {$cfg['batt_cell_crit_min']}, continue");
+		if($state['maintenance'] === false)
+			$state = log_message($state,"Battery cell voltage below minimum {$cfg['batt_cell_min']} but above critical {$cfg['batt_cell_crit_min']}, continue");
 		$state['charger_throttle'] = 1;
 		$state['inverter_throttle'] = 0;
 		if($state['operation'] <> 0)
@@ -377,7 +378,8 @@ function battery_status($cfg, $battstate) {
 	}
 
 	if((($battstate['cell_max'] < $cfg['batt_cell_crit_max']) &&  ($battstate['cell_max'] > $cfg['batt_cell_max'])) && ($state['battery_connect'] === false)){
-		$state = log_message($state,"Battery cell voltage above maximum {$cfg['batt_cell_max']} but below critical {$cfg['batt_cell_crit_max']}, continue");
+		if($state['maintenance'] === false)
+			$state = log_message($state,"Battery cell voltage above maximum {$cfg['batt_cell_max']} but below critical {$cfg['batt_cell_crit_max']}, continue");
 		$state['charger_throttle'] = 0;
 		$state['inverter_throttle'] = 1;
 		if($state['operation'] <> 0)
@@ -725,14 +727,14 @@ function maintenance_charge($cfg, $battstate, $state) {
 	}
 	$cell_diff = round(($battstate['cell_max'] - $battstate['cell_min']), 3);
 	if(($cell_diff > $cfg['maintenance_diff']) && ($state['maintenance'] === false)) {
-		$state = log_message($state,"Enable maintenance charger,  cell difference'{$cell_diff}' exceeds '{$cfg['maintenance_diff']}' limit.");
+		$state = log_message($state,"Enable maintenance charger,  cell difference '{$cell_diff}' exceeds '{$cfg['maintenance_diff']}' limit.");
 		$state['maintenance'] = true;
 		$dev->getLeds()[$cfg['maintenance_charger_acpin']]->turnOn();
 		$dev->getOutputPins()[$cfg['maintenance_charger_acpin']]->turnOn();
 
 	}
 	if(($cell_diff < $cfg['batt_hysteresis']) && ($state['maintenance'] === true)) {
-		$state = log_message($state,"Disable maintenance charger,  cell difference'{$cell_diff}' within hysteresis '{$cfg['batt_hysteresis']}'.");
+		$state = log_message($state,"Disable maintenance charger,  cell difference '{$cell_diff}' within hysteresis '{$cfg['batt_hysteresis']}'.");
 		$state['maintenance'] = false;
 		$dev->getLeds()[$cfg['maintenance_charger_acpin']]->turnOff();
 		$dev->getOutputPins()[$cfg['maintenance_charger_acpin']]->turnOff();
