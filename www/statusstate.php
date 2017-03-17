@@ -26,27 +26,27 @@ echo "<table id='statusstate' border=0 width=300>";
 echo "<tr><td align=right width=100 valign=top>";
 switch($state['operation']) {
 	case 2:
-		echo "<img src=images/p1_generation2.png height=30>";
+		echo "<img src=images/p1_generation2.png title='Generation' height=30>";
 		break;
 	case -2:
-		echo "<img src=images/p1_consumption2.png height=30>";
+		echo "<img src=images/p1_consumption2.png title='Consumption' height=30>";
 		break;
 	case -1:
 	case 0:
 	case 1:
 		if($state['available_power'] > 0)
-			echo "<img src=images/grid_generation.png height=30>&nbsp;";
+			echo "<img src=images/grid_generation.png title='Generation' height=30>&nbsp;";
 		if($state['available_power'] < 0)
-			echo "<img src=images/grid_consumption.png height=30>&nbsp;";
+			echo "<img src=images/grid_consumption.png title='Consumption' height=30>&nbsp;";
 		if($state['available_power'] == 0)
-			echo "<img src=images/grid_idle.png height=30>&nbsp;";
+			echo "<img src=images/grid_idle.png title='No generation, no consumption' height=30>&nbsp;";
 
 		if($state['available_power'] > 0)
-			echo "<img src=images/p1_generation2.png height=30>";
+			echo "<img src=images/p1_generation2.png title='Generation' height=30>";
 		if($state['available_power'] < 0)
-			echo "<img src=images/p1_consumption2.png height=30>";
+			echo "<img src=images/p1_consumption2.png title='Consumption' height=30>";
 		if($state['available_power'] == 0)
-			echo "<img src=images/batt_idle.png height=30>";
+			echo "<img src=images/batt_idle.png title='No generation, no consumption' height=30>";
 		break;
 }
 
@@ -69,27 +69,27 @@ switch($state['operation']) {
 echo "</td><td align=left width=100 valign=top>";
 switch($state['operation']) {
 	case 2:
-		echo "<img src=images/p1_generation2.png height=30>";
+		echo "<img src=images/p1_generation2.png title='Generation' height=30>";
 		break;
 	case -2:
-		echo "<img src=images/p1_consumption2.png height=30>";
+		echo "<img src=images/p1_consumption2.png title='Consumption' height=30>";
 		break;
 	case -1:
 	case 0:
 	case 1:
 		if($state['available_power'] > 0)
-			echo "<img src=images/p1_generation2.png height=30>";
+			echo "<img src=images/p1_generation2.png title='Generation standby' height=30>";
 		if($state['available_power'] < 0)
-			echo "<img src=images/p1_consumption2.png height=30>";
+			echo "<img src=images/p1_consumption2.png title='Consumption standby' height=30>";
 		if($state['available_power'] == 0)
-			echo "<img src=images/batt_idle.png height=30>";
+			echo "<img src=images/batt_idle.png title='No consumption, no generation' height=30>";
 
 		if($state['available_power'] > 0)
-			echo "&nbsp;<img src=images/house_generation.png height=30>";
+			echo "&nbsp;<img src=images/house_generation.png title='Generation' height=30>";
 		if($state['available_power'] < 0)
-			echo "&nbsp;<img src=images/house_consumption.png height=30>";
+			echo "&nbsp;<img src=images/house_consumption.png title='Consumption' height=30>";
 		if($state['available_power'] == 0)
-			echo "&nbsp;<img src=images/house_idle.png height=30>";
+			echo "&nbsp;<img src=images/house_idle.png title='No consumption, no generation' height=30>";
 
 		break;
 }
@@ -116,15 +116,15 @@ echo "<tr><td align=right width=100 height=30 valign=top>&nbsp;";
 echo "</td><td align=center width=100 valign=top>";
 switch($state['operation']) {
 	case 2:
-		echo "<img src=images/batt_charge.png height=30>";
+		echo "<img src=images/batt_charge.png title='Charging' height=30>";
 		break;
 	case -2:
-		echo "<img src=images/batt_invert.png height=30>";
+		echo "<img src=images/batt_invert.png title='Inverting' height=30>";
 		break;
 	case -1:
 	case 1:
 	case 0:
-		echo "<img src=images/batt_idle.png height=30>";
+		echo "<img src=images/batt_idle.png title='Idle' height=30>";
 		break;
 }
 echo "</td><td align=left width=100 valign=top>&nbsp;";
@@ -138,11 +138,11 @@ echo "<tr>";
 foreach($state['inverters'] as $idx => $array) {
 	echo "<td align=center>";
 	if(($array['ac'] === false))
-		echo "<img src='images/power_off.png' width=40>";
+		echo "<img src='images/power_off.png' title='Inverter AC disconnected' width=40>";
 	if(($array['ac'] === true) && ($state['operation'] == -2))
-		echo "<img src='images/power_on.png' width=40>";
-	elseif(($array['ac'] === true) && ($state['operation'] != -2))
-		echo "<img src='images/power_idle.png' width=40>";
+		echo "<img src='images/power_on.png' title='Inverter AC connected' width=40>";
+	elseif(($array['ac'] === true) && ($state['operation'] != AQ-2))
+		echo "<img src='images/power_idle.png' title='Inverter AC idle, timer' width=40>";
 	echo "</td>";
 }
 echo "</tr>\n";
@@ -156,7 +156,7 @@ echo "</tr>\n";
 echo "<tr>";
 foreach($state['inverters'] as $idx => $array) {
 	echo "<td align=center>";
-	echo "<img src='images/inverter.png' width=40>";
+	echo "<img src='images/inverter.png' title='Inverter'  width=40>";
 	echo "</td>";
 }
 echo "</tr>\n";
@@ -164,14 +164,14 @@ echo "<tr>";
 foreach($state['inverters'] as $idx => $array) {
 	echo "<td align=center>";
 	if(($array['dc'] === false))
-		echo "<img src='images/power_off.png' width=40>";
+		echo "<img src='images/power_off.png' title='Inverter DC disconnected'  width=40>";
 	if(($array['dc'] === true) && ($state['operation'] == -2))
 		if(($array['pwm'] > 0) && ($array['pwm'] < 1))
-			echo "<img src='images/limiter_on.png' width=40>";
+			echo "<img src='images/limiter_on.png' title='Inverter DC power limited' width=40>";
 		else
-			echo "<img src='images/power_on.png' width=40>";
+			echo "<img src='images/power_on.png' title='Inverter DC Connected' width=40>";
 	elseif(($array['dc'] === true) && ($state['operation'] != -2))
-		echo "<img src='images/power_idle.png' width=40>";
+		echo "<img src='images/power_idle.png' title='Inverter DC idle'  width=40>";
 	echo "</td>";
 }
 echo "</tr>\n";
@@ -184,11 +184,11 @@ echo "<tr>";
 foreach($state['chargers'] as $idx => $array) {
 	echo "<td align=center>";
 	if(($array['ac'] === false))
-		echo "<img src='images/power_off.png' width=40>";
+		echo "<img src='images/power_off.png' title='Charger AC disconnected' width=40>";
 	if(($array['ac'] === true) && ($state['operation'] == 2))
-		echo "<img src='images/power_on.png' width=40>";
+		echo "<img src='images/power_on.png' title='Charger AC connected' width=40>";
 	elseif(($array['ac'] === true) && ($state['operation'] != 2))
-		echo "<img src='images/power_idle.png' width=40>";
+		echo "<img src='images/power_idle.png' title='Charger AC idle, timer'  width=40>";
 	echo "</td>";
 }
 echo "</tr>\n";
@@ -202,7 +202,7 @@ echo "</tr>\n";
 echo "<tr>";
 foreach($state['chargers'] as $idx => $array) {
 	echo "<td align=center>";
-	echo "<img src='images/charger.png' width=40>";
+	echo "<img src='images/charger.png' title='Charger' width=40>";
 	echo "</td>";
 }
 echo "</tr>\n";
@@ -210,14 +210,14 @@ echo "<tr>";
 foreach($state['chargers'] as $idx => $array) {
 	echo "<td align=center>";
 	if(($array['dc'] === false))
-		echo "<img src='images/power_off.png' width=40>";
+		echo "<img src='images/power_off.png' title='Charger DC disconnected' width=40>";
 	if(($array['dc'] === true) && ($state['operation'] == 2))
 		if(($array['pwm'] > 0) && ($array['pwm'] < 1))
-			echo "<img src='images/limiter_on.png' width=40>";
+			echo "<img src='images/limiter_on.png' title='Charger DC power limited' width=40>";
 		else
-			echo "<img src='images/power_on.png' width=40>";
+			echo "<img src='images/power_on.png' title='Charger DC connected'  width=40>";
 	elseif(($array['dc'] === true) && ($state['operation'] != 2))
-		echo "<img src='images/power_idle.png' width=40>";
+		echo "<img src='images/power_idle.png' title='Charger DC idle' width=40>";
 	echo "</td>";
 }
 echo "</tr>\n";
@@ -228,13 +228,15 @@ echo "</td></tr>\n";
 
 echo "<tr><td colspan=2 align=center>";
 if($state['battery_connect'] === true)
-	echo UcWords($state['battery']) ."<br><img src='images/battery_ok.png' width=50>&nbsp;";
+	echo UcWords($state['battery']) ."<br><img src='images/battery_ok.png' title='Battery Connected' width=50>&nbsp;";
 if($state['battery_connect'] === false)
-	echo "{$state['battery']}<br><img src='images/battery_nok.png' width=50>&nbsp;";
+	echo "{$state['battery']}<br><img src='images/battery_nok.png' title='Battery Not Connected' width=50>&nbsp;";
+if($state['maintenance'] === true)
+	echo "&nbsp;<img valign=top src='images/maintenance.png' title='Maintenance Charging enabled' width=50>";
 if(($state['charger_throttle'] < 1) && ($state['charger_throttle'] > 0) && ($state['battery'] == "charging"))
-	echo "&nbsp;<img valign=top src='images/blimiter.png' width=50>";
+	echo "&nbsp;<img valign=top src='images/blimiter.png' title='Battery almost full, limiting' width=50>";
 if(($state['inverter_throttle'] < 1) && ($state['inverter_throttle'] > 0) && ($state['battery'] == "discharging"))
-	echo "&nbsp;<img valign=top src='images/blimiter.png' width=50>";
+	echo "&nbsp;<img valign=top src='images/blimiter.png' title='Battery almost empty, limiting' width=50>";
 echo "</td></tr>\n";
 
 if((time() - $state['time']) > 10)
