@@ -54,14 +54,17 @@ $state['inverters'][1]['dc'] = false;
 $state['chargers'][1]['ac'] = false;
 $state['chargers'][1]['dc'] = false;
 // Pre flight check
-$state['simulate'] = false;
+$cfg['simulate'] = false;
+$cfg['batt_cells'] = 3;
 
 $battstate = array();
 // Battery status should connect the battery for us if it's good
-// $battstate = battery_status($cfg, $battstate);
+$battstate = battery_status($cfg, $battstate);
 
-print_r(return_chargers_power($cfg));
-print_r(return_inverters_power($cfg));
+// print_r(return_chargers_power($cfg));
+// print_r(return_inverters_power($cfg));
+
+print_r($battstate);
 
 
 
