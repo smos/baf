@@ -658,8 +658,6 @@ function drive_pwm($cfg, $channel, $pwm) {
 	}
 
 	$pwmstep = round($pwm * 4096);
-	if($pwmstep == 0)
-		$pwmstep = 1;
 	if($pwmstep == 4096)
 		$pwmstep = 4095;
 

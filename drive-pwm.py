@@ -6,7 +6,7 @@ import time
 from ABE_helpers import ABEHelpers
 
 """
-run with: python drive-pwm.py -c N -p N
+run with: python drive-pwm.py channel pwm
 """
 
 parser = argparse.ArgumentParser(description='Drive channel N at pwm 0-4096')
@@ -24,6 +24,10 @@ pwm = PWM(bus, 0x40)
 
 # Set PWM frequency to 1 Khz and enable the output
 pwm.set_pwm_freq(1000)
-pwm.output_enable()
+if args.pwm == 0:
+	pwm.output_disable()
 
-pwm.set_pwm(args.channel, 0, args.pwm)
+if args.pwm > 0:
+	pwm.output_enable()
+	pwm.set_pwm(args.channel, 0, args.pwm)
+
