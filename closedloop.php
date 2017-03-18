@@ -144,7 +144,6 @@ while(true) {
 		$state = drive_inverters($state);
 		$state = drive_chargers($state);
 		$state['available_power'] = 0 + $p1_pow['power_gen_cur'] - $p1_pow['power_cons_cur'];
-		/* do we need to maintenance charge? Only with generation after we are done with normal charging */
 		$state = maintenance_charge($cfg, $battstate, $state);
 		if((time() - $state[0]) > $cfg['batt_timeout'])
 			toggle_battery(false);
@@ -152,6 +151,8 @@ while(true) {
 		sleep($cfg['timer_loop']);
 		continue;
 	}
+	/* do we need to maintenance charge? Only with generation after we are done with normal charging */
+	$state = maintenance_charge($cfg, $battstate, $state);
 
 	// Still here? Good. Let the controller attempt to make some decisions
 	$state = controller($cfg, $state, $p1_pow, $battstate, $dev);

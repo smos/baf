@@ -726,14 +726,14 @@ function maintenance_charge($cfg, $battstate, $state) {
 		$dev->getOutputPins()[$cfg['maintenance_charger_acpin']]->turnOff();
 	}
 	$cell_diff = round(($battstate['cell_max'] - $battstate['cell_min']), 3);
-	if(($cell_diff > $cfg['maintenance_diff']) && ($state['maintenance'] === false)) {
+	if(($cell_diff > $cfg['maintenance_diff']) && ($state['maintenance'] === false) && ($state['operation'] == 0) && ($state['battery'] == "full")) {
 		$state = log_message($state,"Enable maintenance charger,  cell difference '{$cell_diff}' exceeds '{$cfg['maintenance_diff']}' limit.");
 		$state['maintenance'] = true;
 		$dev->getLeds()[$cfg['maintenance_charger_acpin']]->turnOn();
 		$dev->getOutputPins()[$cfg['maintenance_charger_acpin']]->turnOn();
 
 	}
-	if(($cell_diff < $cfg['batt_hysteresis']) && ($state['maintenance'] === true)) {
+	if(($cell_diff < $cfg['batt_hysteresis']) && ($state['maintenance'] === true) && ($state['operation'] == 0)) {
 		$state = log_message($state,"Disable maintenance charger,  cell difference '{$cell_diff}' within hysteresis '{$cfg['batt_hysteresis']}'.");
 		$state['maintenance'] = false;
 		$dev->getLeds()[$cfg['maintenance_charger_acpin']]->turnOff();
