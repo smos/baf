@@ -16,14 +16,14 @@ Features
 - Charge and Discharge power taper at end of range. (adjustable)
 - Auxilary charger for balancing cells (adjustable voltage diff trigger).
 
-Bill of Materials
+Bill of Materials (euro)
 - Raspberry Pi (~50)
 - ADCPi from ABElectronics Uk (~15)
 - ServoPi from ABElectronics Uk (~15)
 - PiFace Digital from PiFace UK (~25)
 - (2) PWM controller that takes 0-5V input like the following. (~30) https://www.aliexpress.com/item/DC-10-50V-PWM-DC-Motor-Speed-Controller-3000w-Max-12V-24V-36V-40V-50V-60A/1830078283.html
 - (2) 5 Volt 4 Channel Arduino Relay board with optocoupler. (~7) https://www.aliexpress.com/item/Free-shipping-4-channel-relay-module-4-channel-relay-control-board-with-optocoupler-Relay-Output-4/32702042620.html
-- Fuse holder (3D Printed)
+- Fuse holder (3D Printed). http://www.thingiverse.com/thing:1787609
 - 1.5/2.5mm2 wiring for DC
 - 1m 0.75mm2 wiring for AC with ground
 - 4 AC Outlets (~8)
@@ -77,3 +77,5 @@ http://iserv.nl/files/pics/ess/cellsort.php
 - Here is a screenshot of the WebUI status http://iserv.nl/files/pics/ess/baf3000.png
 - The Voltage divider is a bit finicky, as it depends on the battery Voltage you want to measure and it's easiest to use the Divider calculator on the website from ABE.
 - Here is what the ESS looks like with some of it screwed to a board. http://iserv.nl/files/pics/raspberry/20170313_223826_th.jpg
+- I designed some 18650 battery holders and put them on. http://www.thingiverse.com/thing:2169732
+- I designed a generic PCB mount for the relay boards. http://www.thingiverse.com/thing:2169739
