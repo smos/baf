@@ -6,13 +6,30 @@ To steer energy demand for higher self use of Solar energy using a battery, a ch
 
 Instructions are not entirely complete yet, but it's a start. Basic Raspberry module things.
 
-Currently
-- Supports more then 1 inverter
-- Supports different size inverters
+Features
+- Supports more then 1 Inverter/Charger.
+- Supports different size inverters/Chargers.
 - Operates remotely from the P1 reader using the arduino nano P1 reader.
-- WebUI to show current operations and P1 meter readings
-- Has timers to prevent flip-flopping of relays
-- Allows for diverse battery configurations, but currently limited to 8S Lithium
+- WebUI to show current operations and P1 meter readings.
+- Has idle timers to prevent flip-flopping of AC relays (inverters/chargers).
+- Allows for diverse battery configurations, adjust voltages accordingly.
+- Charge and Discharge power taper at end of range. (adjustable)
+- Auxilary charger for balancing cells (adjustable voltage diff trigger).
+
+Bill of Materials
+- Raspberry Pi (~50)
+- ADCPi from ABElectronics Uk (~15)
+- ServoPi from ABElectronics Uk (~15)
+- PiFace Digital from PiFace UK (~25)
+- (2) PWM controller that takes 0-5V input like the following. (~30) https://www.aliexpress.com/item/DC-10-50V-PWM-DC-Motor-Speed-Controller-3000w-Max-12V-24V-36V-40V-50V-60A/1830078283.html
+- (2) 5 Volt 4 Channel Arduino Relay board with optocoupler. (~7) https://www.aliexpress.com/item/Free-shipping-4-channel-relay-module-4-channel-relay-control-board-with-optocoupler-Relay-Output-4/32702042620.html
+- Fuse holder (3D Printed)
+- 1.5/2.5mm2 wiring for DC
+- 1m 0.75mm2 wiring for AC with ground
+- 4 AC Outlets (~8)
+- (2) 5S balance leads for the relay boards
+- (4) 8S Balance leads for the battery monitoring
+- DIY PCB, 8 100K resistors, flatcable with single connectors
 
 Instructions
 - Requires a Arduino Nano with Ethernetshield to connect to the P1 port of the utility smart meter. If you use something else for your power readings, that's fine, it just needs to post the data to a page of the webserver on the Raspberry. The arduino code is under arduino/ and you need to modify the IP address it POSTs too. It's currently set to 192.168.11.238.
@@ -45,7 +62,7 @@ Add the following path to the .profile of the pi user.
 
 - It uses PiFace for 8 relay outputs using the PHP PiFace toolkit from https://github.com/peec/raspberry-piface-api
 Follow the instruction there and install under the ~/baf/ directory. The previous php_spi needs to work though.
-Make sure that you build the vendor directory and composer.json in the ~/baf/ direcory.
+Make sure that you build the vendor directory and composer.json in the ~/baf/ direcory. In the future I want to move this to the AB IO board as it's better suited for the purpose.
 
 - Add users to the groups. Add pi to the www-data group and www-data to the pi group, you can "sudo nano /etc/group"
 
@@ -53,11 +70,9 @@ Make sure that you build the vendor directory and composer.json in the ~/baf/ di
 "su -l pi -c "screen -d -m -S essloop php ~/baf/closedloop.php"
 Add the command to /etc/rc.local too so that it starts on boot, it logs to syslog.
 
-The Voltage divider is a bit finicky, as it depends on the input resistance, I adjusted the divider accordingly, my 6.8k became more like 4900.
 
 Other
-I built a PHP script to sort 18650 batteries from left to right to get mostly equal sized Ah cells for the given configuration
+- I built a PHP script to sort 18650 batteries from left to right to get mostly equal sized Ah cells for the given configuration
 http://iserv.nl/files/pics/ess/cellsort.php
-
-Here is a screenshot of the WebUI status
-http://iserv.nl/files/pics/ess/baf3000.png
+- Here is a screenshot of the WebUI status http://iserv.nl/files/pics/ess/baf3000.png
+- The Voltage divider is a bit finicky, as it depends on the battery Voltage you want to measure and it's easiest to use the Divider calculator on the website from ABE.
