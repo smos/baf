@@ -76,3 +76,4 @@ Other
 http://iserv.nl/files/pics/ess/cellsort.php
 - Here is a screenshot of the WebUI status http://iserv.nl/files/pics/ess/baf3000.png
 - The Voltage divider is a bit finicky, as it depends on the battery Voltage you want to measure and it's easiest to use the Divider calculator on the website from ABE.
+- Here is what the ESS looks like with some of it screwed to a board. http://iserv.nl/files/pics/raspberry/20170313_223826_th.jpg
