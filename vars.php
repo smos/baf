@@ -21,7 +21,7 @@ $shm_p1_key = 0x1337;
 $shm_raw_key = 0xb33f;
 $shm_state_key = 0xd34d;
 $shm_batt_key = 0x50c4;
-$seg_size = 8192;
+$seg_size = 1024;
 
 // Serial port
 $p1_serial = "/dev/ttyUSB0";
