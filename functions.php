@@ -66,6 +66,9 @@ function write_p1_shm($shm_id, $shm_raw_id, $array, $datagram) {
 		$state = log_message($state,"The P1 datagram is too large for shm");
 		exit(2);
 	}
+	shmop_close($shm_id);
+	shmop_close($shm_raw_id);
+	return($state);
 }
 
 function read_p1_shm($shm_key, $seg_size) {
@@ -81,6 +84,7 @@ function read_p1_shm($shm_key, $seg_size) {
 	if(!is_array($data))
 		return false;
 
+	shmop_close($shm_id);
 	return($data);
 }
 
@@ -320,24 +324,29 @@ function get_cell_voltages($cfg, $battstate) {
 	$cells = array();
 	exec("{$cfg['batt_cell_cmd']}", $out, $ret);
 	if($ret > 0) {
+		if((time() - $battstate['time']) < 10) {
+			$state = log_message($state, "Failed to get battery cell voltages, using previous values");
+			return $battstate['cells'];
+		}
 		$state = log_message($state, "Failed to get battery cell voltages");
 		$battstate['cells'] = array();
 		return $battstate['cells'];
 	}
+
+
 	$previous = 0;
 	foreach($out as $line) {
-		// echo "$line\n";
+		/* only use configured number of cells */
 		if(count($cells) >= $cfg['batt_cells'])
 			continue;
 		if(!empty(trim($line))) {
 			$c_arr = explode(":", $line);
 			$previous = array_sum($cells);
-			// $cells[$c_arr[0]] = floatval((trim($c_arr[1])) * floatval($cfg['batt_voltage_div']) - array_sum($cells));
 			$cells[$c_arr[0]] = floatval(trim($c_arr[1])) * floatval($cfg['batt_voltage_div']) - $previous;
 		}
-		// print_r($cells);
 	}
 	$battstate['cells'] = $cells;
+	$battstate['time'] = time();
 	return $battstate['cells'];
 }
 

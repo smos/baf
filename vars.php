@@ -31,7 +31,7 @@ $p1_parity = "E";
 $p1_stopbits = "1";
 
 // Timers
-$cfg['timer_loop'] = 3;
+$cfg['timer_loop'] = 1;
 $cfg['timer_wait'] = 60;
 
 // Simulate a battery
