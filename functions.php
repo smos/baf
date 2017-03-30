@@ -531,7 +531,7 @@ function power_device_ac($cfg, $state, $category, $idx, $toggle) {
 		}
 
 		if(((time() - $statetime) > $cfg[$category][$idx]['standby'])  && ($state[$category][$idx]['ac'] === true)) {
-			$state = log_message($state, "Disable {$category} index {$idx} AC after standby time ".(time() - $state[2])." exceeds {$cfg[$category][$idx]['standby']}");
+			$state = log_message($state, "Disable {$category} index {$idx} AC after standby time ".(time() - $statetime)." exceeds {$cfg[$category][$idx]['standby']}");
 			$dev->getLeds()[$cfg[$category][$idx]['acpin']]->turnOff();
 			$dev->getOutputPins()[$cfg[$category][$idx]['acpin']]->turnOff();
 			$state[$category][$idx]['ac'] = false;
@@ -568,7 +568,6 @@ function power_device_dc($cfg, $state, $category, $idx, $pwm) {
 		if($state[$category][$idx]['pwm'] != $pwm)
 			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 		$state[$category][$idx]['pwm'] = $pwm;
-		$state[$category][$idx]['time'] = time();
 	}
 	if(($pwm > 0)){
 		if($state[$category][$idx]['dc'] === false) {
@@ -582,7 +581,6 @@ function power_device_dc($cfg, $state, $category, $idx, $pwm) {
 		if($state[$category][$idx]['pwm'] != $pwm)
 			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 		$state[$category][$idx]['pwm'] = $pwm;
-		$state[$category][$idx]['time'] = time();
 	}
 	return($state);
 }
@@ -688,8 +686,8 @@ function shutdown() {
 	$state['charger_power'] = 0;
 	$state['inverter_power'] = 0;
 	$state['available_power'] = 0;
-	$state['duration'][2] = time();
-	$state['duration'][-2] = time();
+	$state['duration'][2] = 0;
+	$state['duration'][-2] = 0;
 	write_state_shm($shm_state_id, $state);
 	foreach($cfg['inverters'] as $idx => $inverter) {
 		$state = power_device_ac($cfg, $state, "inverters", $idx, 0);
@@ -748,6 +746,51 @@ function maintenance_charge($cfg, $battstate, $state) {
 
 	}
 	return $state;
+}
+
+function timeDiff($time, $opt = array()) {
+    // The default values
+    $defOptions = array(
+        'to' => 0,
+        'parts' => 1,
+        'precision' => 'second',
+        'distance' => TRUE,
+        'separator' => ', '
+    );
+    $opt = array_merge($defOptions, $opt);
+    // Default to current time if no to point is given
+    (!$opt['to']) && ($opt['to'] = time());
+    // Init an empty string
+    $str = '';
+    // To or From computation
+    $diff = ($opt['to'] > $time) ? $opt['to']-$time : $time-$opt['to'];
+    // An array of label => periods of seconds;
+    $periods = array(
+        'decade' => 315569260,
+        'year' => 31556926,
+        'month' => 2629744,
+        'week' => 604800,
+        'day' => 86400,
+        'hour' => 3600,
+        'minute' => 60,
+        'second' => 1
+    );
+    // Round to precision
+    if ($opt['precision'] != 'second')
+        $diff = round(($diff/$periods[$opt['precision']])) * $periods[$opt['precision']];
+    // Report the value is 'less than 1 ' precision period away
+    (0 == $diff) && ($str = 'less than 1 '.$opt['precision']);
+    // Loop over each period
+    foreach ($periods as $label => $value) {
+        // Stitch together the time difference string
+        (($x=floor($diff/$value))&&$opt['parts']--) && $str.=($str?$opt['separator']:'').($x.' '.$label.($x>1?'s':''));
+        // Stop processing if no more parts are going to be reported.
+        if ($opt['parts'] == 0 || $label == $opt['precision']) break;
+        // Get ready for the next pass
+        $diff -= $x*$value;
+    }
+    $opt['distance'] && $str.=($str&&$opt['to']>$time)?' ago':' away';
+    return $str;
 }
 
 ?>

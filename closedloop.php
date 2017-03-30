@@ -42,6 +42,7 @@ $shm_batt_id = open_shm($shm_batt_key, $seg_size, "w");
 $state = array();
 /* this decides the direction from -2 to +2 */
 $state['time'] = time();
+$state['bootup'] = time();
 $state[-2] = 0;
 $state[-1] = 0;
 $state[0] = time();
@@ -119,7 +120,7 @@ while(true) {
 	// Check low battery status without generation
 	if(($p1_pow['power_gen_cur'] < $cfg['pow_gen_min']) && (($battstate['cell_min'] + $batt_hysteresis)< $cfg['batt_cell_min'])) {
 		if($state['battery'] != "empty")
-			$state = log_message($state,"No generation, battery empty");
+			$state = log_message($state,"No generation, battery empty, idle");
 		$state['operation'] = 0;
 		$state['charger_pwm'] = 0;
 		$state['inverter_pwm'] = 0;
@@ -136,7 +137,7 @@ while(true) {
 	// Check high battery status without consumption
 	if(($p1_pow['power_cons_cur'] < $cfg['pow_cons_min']) && (($battstate['cell_max'] - $batt_hysteresis) > $cfg['batt_cell_max'])) {
 		if($state['battery'] != "full")
-			$state = log_message($state,"No consumption, battery full");
+			$state = log_message($state,"No consumption, battery full, idle");
 		$state['operation'] = 0;
 		$state['charger_pwm'] = 0;
 		$state['inverter_pwm'] = 0;

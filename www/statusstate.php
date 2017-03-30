@@ -243,6 +243,7 @@ if((time() - $state['time']) > 10)
 	echo "<tr><td >Timeout</td><td bgcolor=coral>". date("H:i:s", $state['time']) ."</td></tr>\n";
 else
 	echo "<tr><td >Running</td><td bgcolor=lightgreen>". date("H:i:s", $state['time']) ."</td></tr>\n";
+echo "<tr><td ><font size=2>Uptime</td><td><font size=2>". timeDiff($state['bootup'], array('to' => 0, 'parts' => 2, 'precision' => 'minute', 'distance' => false, 'seperator' => ', ')) ."</font></td></tr>\n";
 
 echo "<tr><td colspan=2 ><font size=2>{$state['message_time']} | {$state['message']}</font></td></tr>\n";
 
