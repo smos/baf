@@ -156,6 +156,7 @@ function controller($cfg, $state, $power, $battstate, $dev) {
 			/* Calculate PWM based on current diff but add current inverter power */
 			$state['inverter_power'] = round(($power_diff + $cur_inverter_power) - $cfg['pow_cons_min']);
 			$state = drive_inverters($state);
+			$state = drive_chargers($state);
 			// $state = drive_chargers($state);
 			$state['battery'] = "discharging";
 			if(($power_diff - $cfg['pow_cons_min'] + $cur_inverter_power) < $inverters['power_min']) {
@@ -230,6 +231,7 @@ function controller($cfg, $state, $power, $battstate, $dev) {
 			// $state = log_message($state, "Generation power diff = {$power_diff}, charger power {$cur_charger_power}");
 			// $state = drive_inverters($state);
 			$state = drive_chargers($state);
+			$state = drive_inverters($state);
 			$state['battery'] = "charging";
 			if(($power_diff - $cfg['pow_gen_min'] + $cur_charger_power) < $chargers['power_min']) {
 				$state['operation'] = $state['operation'] - 1;
@@ -627,6 +629,7 @@ function drive_inverters($state) {
 				}
 				$cpower = $cpower - (($inverter['power'] * $inverter['pwm_max'])/100);
 			}
+print_r($cpower);
 			if($c == 1) {
 				foreach($enabled as $idx => $value) {
 					$pwm[$idx] = (($state['inverter_power']/$c)/$cfg['inverters'][$idx]['power']);
@@ -697,10 +700,11 @@ function shutdown() {
 		$state = power_device_ac($cfg, $state, "chargers", $idx, 0);
 		$state = power_device_dc($cfg, $state, "chargers", $idx, 0);
 	}
-	drive_inverters($state);
-	drive_chargers($state);
+	$state = drive_inverters($state);
+	$state = drive_chargers($state);
 	write_state_shm($shm_state_id, $state);
 	sleep($cfg['timer_loop']);
+	$state = maintenance_charger_disable($cfg, $battstate, $state);
 	toggle_battery(false);
 	// reset gpio
 	$dev->init();
@@ -718,6 +722,16 @@ function log_message($state = array(), $message = "") {
 	echo "{$date} {$message}\n";
 	$state['message'] = "{$message}";
 	$state['message_time'] = "{$date}";
+	return $state;
+}
+
+function maintenance_charger_disable($cfg, $battstate, $state) {
+	global $dev;
+		$state = log_message($state,"Disable maintenance charger.");
+		$state['maintenance'] = false;
+		$dev->getLeds()[$cfg['maintenance_charger_acpin']]->turnOff();
+		$dev->getOutputPins()[$cfg['maintenance_charger_acpin']]->turnOff();
+
 	return $state;
 }
 

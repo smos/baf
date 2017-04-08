@@ -53,7 +53,7 @@ $cfg['batt_cell_min'] = 3.45;
 $cfg['batt_cell_max'] = 4.05;
 $cfg['batt_cell_cmd'] = "python ~/baf/readvoltage.py";
 // Use the calculator https://www.abelectronics.co.uk/tools/adc-pi-input-calc
-$cfg['batt_voltage_div'] = 6.9569;
+$cfg['batt_voltage_div'] = 6.9569 * 0.99;
 $cfg['batt_charge_taper'] = 20; // percent
 $cfg['batt_discharge_taper'] = 20; //percent
 $cfg['batt_hysteresis'] = 0.05; // Volt
