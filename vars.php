@@ -53,7 +53,12 @@ $cfg['batt_cell_min'] = 3.45;
 $cfg['batt_cell_max'] = 4.05;
 $cfg['batt_cell_cmd'] = "python ~/baf/readvoltage.py";
 // Use the calculator https://www.abelectronics.co.uk/tools/adc-pi-input-calc
-$cfg['batt_voltage_div'] = 6.9569 * 0.99;
+$cfg['batt_voltage_div'] = 6.9569;
+// Per cel voltage reading correction
+$cfg['batt_cell_correction'][0] = 0.99;
+$cfg['batt_cell_correction'][1] = 0.99;
+$cfg['batt_cell_correction'][2] = 0.98;
+$cfg['batt_cell_correction'][3] = 0.98;
 $cfg['batt_charge_taper'] = 20; // percent
 $cfg['batt_discharge_taper'] = 20; //percent
 $cfg['batt_hysteresis'] = 0.05; // Volt
@@ -69,10 +74,10 @@ $cfg['pow_cons_min'] = 10;
 $cfg['pwm_command'] = "python ~/baf/drive-pwm.py";
 
 // Set PWM limits for our charger and inverter, depends on the battery
-$cfg['inverters'][1]['pwm_min'] = 20; // Percent
+$cfg['inverters'][1]['pwm_min'] = 10; // Percent
 $cfg['inverters'][1]['pwm_max'] = 100;
 $cfg['inverters'][1]['pwm_channel'] = 0;
-$cfg['inverters'][1]['power'] = 500; // Watts
+$cfg['inverters'][1]['power'] = 250; // Watts
 $cfg['inverters'][1]['acpin'] = 0;
 $cfg['inverters'][1]['dcpin'] = 1;
 $cfg['inverters'][1]['standby'] = 300;
@@ -84,10 +89,10 @@ $cfg['inverters'][2]['acpin'] = 5;
 $cfg['inverters'][2]['dcpin'] = 6;
 $cfg['inverters'][2]['standby'] = 300;
 */
-$cfg['chargers'][1]['pwm_min'] = 20; // Percent
+$cfg['chargers'][1]['pwm_min'] = 10; // Percent
 $cfg['chargers'][1]['pwm_max'] = 100;
 $cfg['chargers'][1]['pwm_channel'] = 1;
-$cfg['chargers'][1]['power'] = 320; // Watts
+$cfg['chargers'][1]['power'] = 185; // Watts
 $cfg['chargers'][1]['acpin'] = 2;
 $cfg['chargers'][1]['dcpin'] = 3;
 $cfg['chargers'][1]['standby'] = 60;

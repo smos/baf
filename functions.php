@@ -155,9 +155,9 @@ function controller($cfg, $state, $power, $battstate, $dev) {
 			// $state = log_message($state, "Consumption power diff = {$power_diff}, inverter power {$cur_inverter_power}");
 			/* Calculate PWM based on current diff but add current inverter power */
 			$state['inverter_power'] = round(($power_diff + $cur_inverter_power) - $cfg['pow_cons_min']);
-			$state = drive_inverters($state);
+			// $state = log_message($state, "Consumption power diff = {$power_diff}, inverter power {$cur_inverter_power}, state inverter power '{$state['inverter_power']}'");
 			$state = drive_chargers($state);
-			// $state = drive_chargers($state);
+			$state = drive_inverters($state);
 			$state['battery'] = "discharging";
 			if(($power_diff - $cfg['pow_cons_min'] + $cur_inverter_power) < $inverters['power_min']) {
 				$state['operation'] = $state['operation'] + 1;
@@ -229,7 +229,6 @@ function controller($cfg, $state, $power, $battstate, $dev) {
 			/* calculate how much we can drive the PWM, the actual percentage is determined in the driver */
 			$state['charger_power'] = round(($power_diff + $cur_charger_power) - $cfg['pow_gen_min']);
 			// $state = log_message($state, "Generation power diff = {$power_diff}, charger power {$cur_charger_power}");
-			// $state = drive_inverters($state);
 			$state = drive_chargers($state);
 			$state = drive_inverters($state);
 			$state['battery'] = "charging";
@@ -337,6 +336,7 @@ function get_cell_voltages($cfg, $battstate) {
 
 
 	$previous = 0;
+	$i = 0;
 	foreach($out as $line) {
 		/* only use configured number of cells */
 		if(count($cells) >= $cfg['batt_cells'])
@@ -344,7 +344,8 @@ function get_cell_voltages($cfg, $battstate) {
 		if(!empty(trim($line))) {
 			$c_arr = explode(":", $line);
 			$previous = array_sum($cells);
-			$cells[$c_arr[0]] = floatval(trim($c_arr[1])) * floatval($cfg['batt_voltage_div']) - $previous;
+			$cells[$c_arr[0]] = floatval(trim($c_arr[1])) * floatval($cfg['batt_voltage_div'] * $cfg['batt_cell_correction'][$i]) - $previous;
+			$i++;
 		}
 	}
 	$battstate['cells'] = $cells;
@@ -405,9 +406,10 @@ function battery_status($cfg, $battstate) {
 		return($battstate);
 	}
 	/* normal operating conditions */
-	if((($battstate['cell_max'] < $cfg['batt_cell_max']) && ($battstate['cell_min'] > $cfg['batt_cell_min'])) && ($state['battery_connect'] === false) && ($state['operation'] <> 0)) {
-		if($state['operation'] <> 0)
+	if(((($battstate['cell_max']-$cfg['batt_hysteresis']) < $cfg['batt_cell_max']) && (($battstate['cell_min']+$cfg['batt_hysteresis']) > $cfg['batt_cell_min'])) && ($state['battery_connect'] === false) && ($state['operation'] <> 0)) {
+		if($state['operation'] <> 0) {
 			$state = toggle_battery(true);
+		}
 	}
 	if($state['battery_connect'] === true) {
 		/* calculate charge and invert throttle based on voltage difference from maximum or minimum */
@@ -424,8 +426,8 @@ function battery_status($cfg, $battstate) {
 		// $state = log_message($state, "Invert throttle is {$state['inverter_throttle']}");
 		if($state['inverter_throttle'] > 1)
 			$state['inverter_throttle'] = 1;
-		//if(($state['inverter_throttle'] < 1) && ($state['inverter_throttle'] > 0))
-		//	$state = log_message($state, "Battery almost empty, limiter effective");
+		// if(($state['inverter_throttle'] < 1) && ($state['inverter_throttle'] > 0))
+		// 	$state = log_message($state, "Battery almost empty, limiter effective");
 		if($state['inverter_throttle'] <= 0)
 			$state['inverter_throttle'] = 0;
 	}
@@ -629,7 +631,6 @@ function drive_inverters($state) {
 				}
 				$cpower = $cpower - (($inverter['power'] * $inverter['pwm_max'])/100);
 			}
-print_r($cpower);
 			if($c == 1) {
 				foreach($enabled as $idx => $value) {
 					$pwm[$idx] = (($state['inverter_power']/$c)/$cfg['inverters'][$idx]['power']);
