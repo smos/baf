@@ -130,6 +130,9 @@ while(true) {
 		$state['available_power'] = 0 + $p1_pow['power_gen_cur'] - $p1_pow['power_cons_cur'];
 		if((time() - $state[0]) > $cfg['batt_timeout'])
 			toggle_battery(false);
+		/* do we need to maintenance charge an empty battery? Doesn't need the battery relay */
+		$state = maintenance_charge($cfg, $battstate, $state);
+
 		write_state_shm($shm_state_id, $state);
 		sleep($cfg['timer_loop']);
 		continue;

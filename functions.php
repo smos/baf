@@ -751,14 +751,25 @@ function maintenance_charge($cfg, $battstate, $state) {
 		$state['maintenance'] = true;
 		$dev->getLeds()[$cfg['maintenance_charger_acpin']]->turnOn();
 		$dev->getOutputPins()[$cfg['maintenance_charger_acpin']]->turnOn();
-
 	}
 	if(($cell_diff < $cfg['batt_hysteresis']) && ($state['maintenance'] === true) && ($state['operation'] == 0)) {
 		$state = log_message($state,"Disable maintenance charger,  cell difference '{$cell_diff}' within hysteresis '{$cfg['batt_hysteresis']}'.");
 		$state['maintenance'] = false;
 		$dev->getLeds()[$cfg['maintenance_charger_acpin']]->turnOff();
 		$dev->getOutputPins()[$cfg['maintenance_charger_acpin']]->turnOff();
-
+	}
+	/* low watermark rescue charging, must be dark outside */
+	if((($battstate['cell_min']+($cfg['batt_hysteresis']/2)) < $cfg['batt_cell_crit_min']) && ($state['maintenance'] === false) && ($state['operation'] == 0) && ($state['battery'] == "empty")) {
+		$state = log_message($state,"Enable maintenance charger, minimum cell '{$battstate['cell_min']}' below critical.");
+		$state['maintenance'] = true;
+		$dev->getLeds()[$cfg['maintenance_charger_acpin']]->turnOn();
+		$dev->getOutputPins()[$cfg['maintenance_charger_acpin']]->turnOn();
+	}
+	if((($battstate['cell_min']-($cfg['batt_hysteresis']/2)) > $cfg['batt_cell_crit_min']) && ($state['maintenance'] === true) && ($state['operation'] == 0)) {
+		$state = log_message($state,"Disable maintenance charger, minimum cell '{$battstate['cell_min']}' above critical.");
+		$state['maintenance'] = false;
+		$dev->getLeds()[$cfg['maintenance_charger_acpin']]->turnOff();
+		$dev->getOutputPins()[$cfg['maintenance_charger_acpin']]->turnOff();
 	}
 	return $state;
 }
