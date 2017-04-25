@@ -14,7 +14,7 @@ Features
 - Has idle timers to prevent flip-flopping of AC relays (inverters/chargers).
 - Allows for diverse battery configurations, adjust voltages accordingly.
 - Charge and Discharge power taper at end of range. (adjustable)
-- Auxilary charger for balancing cells (adjustable voltage diff trigger).
+- Auxilary charger for balancing cells and emergency low-level charging (adjustable voltage diff trigger).
 
 Bill of Materials (euro)
 - Raspberry Pi (~50)
@@ -79,3 +79,16 @@ http://iserv.nl/files/pics/ess/cellsort.php
 - Here is what the ESS looks like with some of it screwed to a board. http://iserv.nl/files/pics/raspberry/20170313_223826_th.jpg
 - I designed some 18650 battery holders and put them on. http://www.thingiverse.com/thing:2169732
 - I designed a generic PCB mount for the relay boards. http://www.thingiverse.com/thing:2169739
+
+
+Log example of a battery draining (with a lightbulb) and stopping:
+Apr 25 22:33:16 bramenstruik php: Set pwm to 0.13, step 532 channel 0
+Apr 25 22:33:18 bramenstruik php: Set pwm to 0.11, step 451 channel 0
+Apr 25 22:33:20 bramenstruik php: Set pwm to 0.16, step 655 channel 0
+Apr 25 22:33:22 bramenstruik php: Set pwm to 0.1, step 410 channel 0
+Apr 25 22:35:37 bramenstruik php: No generation, battery empty, idle
+Apr 25 22:35:37 bramenstruik php: Disable inverters index 1 DC
+Apr 25 22:35:37 bramenstruik php: Set pwm to 0, step 0 channel 0
+Apr 25 22:35:38 bramenstruik php: Disable battery relay
+Apr 25 22:35:40 bramenstruik php: Battery cell voltage below minimum 3.45 but above critical 3.2, continue
+
