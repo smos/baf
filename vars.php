@@ -41,6 +41,9 @@ $cfg['batt_cells'] = 8;
 
 // Battery
 $cfg['batt_dcpin'] = 6;
+/* shared battery PWM channel, if used, set the individual PWM min to 100% if so */
+/* We calculate the drive value based on the individual power and PWM values */
+$cfg['pwm_channel'] = 3;
 if($cfg['simulate'] === false)
 	$cfg['batt_cells'] = 3;
 $cfg['batt_volt_crit_min'] = 3.2 * $cfg['batt_cells']; // Volt

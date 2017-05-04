@@ -474,9 +474,12 @@ function drive_chargers($state) {
 				$state['charger_power'] = $chargers['power_min'];
 			/* Determine which to run */
 			$enabled = array();
-			$c = 0;
 			$pwm = array();
 			$cpower = $state['charger_power'];
+			/* Calculate battery shared PWM, we really need to take current/battery voltege into account, meh */
+			$pwm['battery'] = ($state['inverter_power']/$inverters['power_max']);
+			drive_pwm($cfg, $cfg['pwm_channel'], $pwm['battery']);
+			$c = 0;
 			foreach($cfg['chargers'] as $idx => $charger) {
 				$pwm[$idx] = 0;
 				if($cpower >= 0) {
@@ -620,7 +623,12 @@ function drive_inverters($state) {
 
 			/* Determine which to run */
 			$enabled = array();
+			$pwm = array();
 			$cpower = $state['inverter_power'];
+			/* Calculate battery shared PWM, we really need to take current/battery voltege into account, meh */
+			$pwm['battery'] = ($state['inverter_power']/$inverters['power_max']);
+			drive_pwm($cfg, $cfg['pwm_channel'], $pwm['battery']);
+			/* Calculate individual PWM values */
 			$c = 0;
 			foreach($cfg['inverters'] as $idx => $inverter) {
 				if($cpower >= 0) {
