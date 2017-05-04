@@ -23,7 +23,7 @@ bus = i2c_helper.get_smbus()
 pwm = PWM(bus, 0x40)
 
 # Set PWM frequency to 1 Khz and enable the output
-pwm.set_pwm_freq(50)
+pwm.set_pwm_freq(1000)
 if args.pwm == 0:
 	pwm.output_disable()
 
