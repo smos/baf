@@ -43,7 +43,8 @@ $cfg['batt_cells'] = 8;
 $cfg['batt_dcpin'] = 6;
 /* shared battery PWM channel, if used, set the individual PWM min to 100% if so */
 /* We calculate the drive value based on the individual power and PWM values */
-$cfg['pwm_channel'] = 3;
+$cfg['batt_pwm_channel'] = 2;
+$cfg['batt_pwm_shared'] = true;
 if($cfg['simulate'] === false)
 	$cfg['batt_cells'] = 3;
 $cfg['batt_volt_crit_min'] = 3.2 * $cfg['batt_cells']; // Volt
@@ -68,7 +69,7 @@ $cfg['batt_hysteresis'] = 0.05; // Volt
 $cfg['batt_timeout'] = 60;
 
 // Maintenance charger AC relay pin
-$cfg['maintenance_charger_acpin'] = 5;
+$cfg['maintenance_charger_acpin'] = 4;
 $cfg['maintenance_diff'] = 0.2; // Volt
 
 // Define dead-band Thresholds
@@ -80,6 +81,7 @@ $cfg['pwm_command'] = "python ~/baf/drive-pwm.py";
 $cfg['inverters'][1]['pwm_min'] = 10; // Percent
 $cfg['inverters'][1]['pwm_max'] = 100;
 $cfg['inverters'][1]['pwm_channel'] = 0;
+$cfg['inverters'][1]['pwm_shared'] = true;
 $cfg['inverters'][1]['power'] = 250; // Watts
 $cfg['inverters'][1]['acpin'] = 0;
 $cfg['inverters'][1]['dcpin'] = 1;
@@ -95,6 +97,7 @@ $cfg['inverters'][2]['standby'] = 300;
 $cfg['chargers'][1]['pwm_min'] = 10; // Percent
 $cfg['chargers'][1]['pwm_max'] = 100;
 $cfg['chargers'][1]['pwm_channel'] = 1;
+$cfg['chargers'][1]['pwm_shared'] = true;
 $cfg['chargers'][1]['power'] = 185; // Watts
 $cfg['chargers'][1]['acpin'] = 2;
 $cfg['chargers'][1]['dcpin'] = 3;

@@ -166,7 +166,7 @@ foreach($state['inverters'] as $idx => $array) {
 	if(($array['dc'] === false))
 		echo "<img src='images/power_off.png' title='Inverter DC disconnected'  width=40>";
 	if(($array['dc'] === true) && ($state['operation'] == -2))
-		if(($array['pwm'] > 0) && ($array['pwm'] < 1))
+		if((($array['pwm'] > 0) && ($array['pwm'] < 1))&& (!isset($cfg['inverters'][$idx]['pwm_shared'])))
 			echo "<img src='images/limiter_on.png' title='Inverter DC power limited' width=40>";
 		else
 			echo "<img src='images/power_on.png' title='Inverter DC Connected' width=40>";
@@ -212,7 +212,7 @@ foreach($state['chargers'] as $idx => $array) {
 	if(($array['dc'] === false))
 		echo "<img src='images/power_off.png' title='Charger DC disconnected' width=40>";
 	if(($array['dc'] === true) && ($state['operation'] == 2))
-		if(($array['pwm'] > 0) && ($array['pwm'] < 1))
+		if((($array['pwm'] > 0) && ($array['pwm'] < 1)) && (!isset($cfg['chargers'][$idx]['pwm_shared'])))
 			echo "<img src='images/limiter_on.png' title='Charger DC power limited' width=40>";
 		else
 			echo "<img src='images/power_on.png' title='Charger DC connected'  width=40>";

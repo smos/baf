@@ -20,11 +20,12 @@ ini_set ('include_path', '.:/home/pi/baf');
 include("vars.php");
 include("functions.php");
 
-$fp = fopen("php://input", 'r+');
-$data = stream_get_contents($fp);
+// $fp = fopen("php://input", 'r+');
+// $data = stream_get_contents($fp);
+$data = file_get_contents("php://input");;
 $array = array();
 $array['time'] = time();
-//syslog(LOG_NOTICE, print_r($_SERVER, true));
+// syslog(LOG_NOTICE, print_r($_SERVER, true));
 $lines = preg_split("/\n/", preg_replace("/\r\n/", "\n", $data));
 foreach($lines as $line) {
 	$line = trim($line);

@@ -76,6 +76,7 @@ foreach($cfg['chargers'] as $idx => $charger) {
 	$state['chargers'][$idx]['pwm'] = false;
 	$state['chargers'][$idx]['time'] = 0;
 }
+$state['pwm'] = array();
 // Pre flight check
 
 // Run once.
@@ -128,7 +129,8 @@ while(true) {
 		$state = drive_inverters($state);
 		$state = drive_chargers($state);
 		$state['available_power'] = 0 + $p1_pow['power_gen_cur'] - $p1_pow['power_cons_cur'];
-		if((time() - $state[0]) > $cfg['batt_timeout'])
+		$previousstate = previous_state($state);
+		if((time() - $state[$previousstate]) > $cfg['batt_timeout'])
 			toggle_battery(false);
 		/* do we need to maintenance charge an empty battery? Doesn't need the battery relay */
 		$state = maintenance_charge($cfg, $battstate, $state);
@@ -149,7 +151,8 @@ while(true) {
 		$state = drive_chargers($state);
 		$state['available_power'] = 0 + $p1_pow['power_gen_cur'] - $p1_pow['power_cons_cur'];
 		$state = maintenance_charge($cfg, $battstate, $state);
-		if((time() - $state[0]) > $cfg['batt_timeout'])
+		$previousstate = previous_state($state);
+		if((time() - $state[$previousstate]) > $cfg['batt_timeout'])
 			toggle_battery(false);
 		write_state_shm($shm_state_id, $state);
 		sleep($cfg['timer_loop']);

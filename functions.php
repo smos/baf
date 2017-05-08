@@ -224,7 +224,9 @@ function controller($cfg, $state, $power, $battstate, $dev) {
 		case 2:
 			$state[$state['operation']] = time();
 			$state['duration'][$state['operation']] = $state[$state['operation']] - $state[1];
-
+			/* if the battery was disconnected we need to connect it before charging */
+			if($state['battery_connect'] === false)
+				toggle_battery(true);
 			$power_diff = 0 - $power['power_cons_cur'] + $power['power_gen_cur'] - $cur_charger_power;
 			/* calculate how much we can drive the PWM, the actual percentage is determined in the driver */
 			$state['charger_power'] = round(($power_diff + $cur_charger_power) - $cfg['pow_gen_min']);
@@ -459,6 +461,9 @@ function drive_chargers($state) {
 			}
 			break;
 		case 1:
+			/* close the PWM before switching relays */
+			if($cfg['batt_pwm_shared'] === true)
+				$state = drive_pwm($state, $cfg, $cfg['batt_pwm_channel'], 0);
 			foreach($cfg['chargers'] as $idx => $charger) {
 				// Enable AC, keep disabled DC
 				$state = power_device_ac($cfg, $state, "chargers", $idx, 1);
@@ -477,8 +482,7 @@ function drive_chargers($state) {
 			$pwm = array();
 			$cpower = $state['charger_power'];
 			/* Calculate battery shared PWM, we really need to take current/battery voltege into account, meh */
-			$pwm['battery'] = ($state['inverter_power']/$inverters['power_max']);
-			drive_pwm($cfg, $cfg['pwm_channel'], $pwm['battery']);
+			$pwm['battery'] = ($state['charger_power']/$chargers['power_max']);
 			$c = 0;
 			foreach($cfg['chargers'] as $idx => $charger) {
 				$pwm[$idx] = 0;
@@ -511,6 +515,9 @@ function drive_chargers($state) {
 					$state = power_device_dc($cfg, $state, "chargers", $idx, 0);
 				}
 			}
+			/* open up the PWM after switching relays */
+			if($cfg['batt_pwm_shared'] === true)
+				$state = drive_pwm($state, $cfg, $cfg['batt_pwm_channel'], $pwm['battery']);
 			break;
 	}
 	return($state);
@@ -566,27 +573,33 @@ function power_device_dc($cfg, $state, $category, $idx, $pwm) {
 	if(($pwm == 0)){
 		if($state[$category][$idx]['dc'] === true) {
 			$state = log_message($state,"Disable {$category} index $idx DC");
-			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
+			/* close the PWM before switching the relay */
+			if($cfg[$category][$idx]['pwm_shared'] === false)
+				$state = drive_pwm($state, $cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 			sleep(0.1);
 			$dev->getLeds()[$cfg[$category][$idx]['dcpin']]->turnOff();
 			$dev->getOutputPins()[$cfg[$category][$idx]['dcpin']]->turnOff();
 			$state[$category][$idx]['dc'] = false;
 		}
 		if($state[$category][$idx]['pwm'] != $pwm)
-			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
+			if($cfg[$category][$idx]['pwm_shared'] === false)
+				$state = drive_pwm($state, $cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 		$state[$category][$idx]['pwm'] = $pwm;
 	}
 	if(($pwm > 0)){
 		if($state[$category][$idx]['dc'] === false) {
 			$state = log_message($state,"Enable {$category} index $idx DC");
-			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
-			sleep(0.1);
 			$dev->getLeds()[$cfg[$category][$idx]['dcpin']]->turnOn();
 			$dev->getOutputPins()[$cfg[$category][$idx]['dcpin']]->turnOn();
+			sleep(0.1);
+			/* Drive the PWM after then relay is on */
+			if($cfg[$category][$idx]['pwm_shared'] === false)
+				$state = drive_pwm($state, $cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 			$state[$category][$idx]['dc'] = true;
 		}
 		if($state[$category][$idx]['pwm'] != $pwm)
-			drive_pwm($cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
+			if($cfg[$category][$idx]['pwm_shared'] === false)
+				$state = drive_pwm($state, $cfg, $cfg[$category][$idx]['pwm_channel'], $pwm);
 		$state[$category][$idx]['pwm'] = $pwm;
 	}
 	return($state);
@@ -607,6 +620,9 @@ function drive_inverters($state) {
 			}
 			break;
 		case -1:
+			/* Close the PWM before the relay is off */
+			if($cfg['batt_pwm_shared'] === true)
+			 	$state = drive_pwm($state, $cfg, $cfg['batt_pwm_channel'], 0);
 			foreach($cfg['inverters'] as $idx => $inverter) {
 				// Enable AC, keep disabled DC
 				$state = power_device_ac($cfg, $state, "inverters", $idx, 1);
@@ -627,7 +643,6 @@ function drive_inverters($state) {
 			$cpower = $state['inverter_power'];
 			/* Calculate battery shared PWM, we really need to take current/battery voltege into account, meh */
 			$pwm['battery'] = ($state['inverter_power']/$inverters['power_max']);
-			drive_pwm($cfg, $cfg['pwm_channel'], $pwm['battery']);
 			/* Calculate individual PWM values */
 			$c = 0;
 			foreach($cfg['inverters'] as $idx => $inverter) {
@@ -660,32 +675,45 @@ function drive_inverters($state) {
 					$state = power_device_dc($cfg, $state, "inverters", $idx, 0);
 				}
 			}
+			/* Drive the PWM after the relay is on */
+			if($cfg['batt_pwm_shared'] === true)
+				$state = drive_pwm($state, $cfg, $cfg['batt_pwm_channel'], $pwm['battery']);
 			break;
 	}
 	return($state);
 }
 
-function drive_pwm($cfg, $channel, $pwm) {
-	global $state;
+function drive_pwm($state, $cfg, $channel, $pwm) {
+	// echo "Calling drive_pwm ". print_r($state, true) . print_r($cfg, true) ." {$channel} {$pwm}\n";
 	if(($channel > 16) || ($channel < 0) || (!is_numeric($channel))) {
 		$state = log_message($state,"We are passed an invalid channel '{$channel}'");
-		return false;
+		return($state);
 	}
 	if(($pwm > 1) || ($pwm < 0) || (!is_numeric($pwm))) {
 		$state = log_message($state,"We are passed an invalid pwm value '{$pwm}'");
-		return false;
+		return($state);
 	}
 
 	$pwmstep = round($pwm * 4096);
 	if($pwmstep == 4096)
 		$pwmstep = 4095;
+	if($pwmstep == 0)
+		$pwmstep = 1;
 
-	$state = log_message($state,"Set pwm to $pwm, step $pwmstep channel $channel");
-	exec("{$cfg['pwm_command']} {$channel} {$pwmstep}", $out, $ret);
-	if($ret > 0)
-		$state = log_message($state,"Failed to set pwm to $pwm channel $channel");
-	if(count($out) > 0)
-		$state = log_message($state,"We got unexpected results $out");
+	if(!isset($state['pwm'][$channel]))
+		$state['pwm'][$channel] = -1;
+	// fetch previous value to see if we need to fire */
+	if($state['pwm'][$channel] <> $pwm) {
+		$state = log_message($state,"Set pwm channel $channel to step $pwmstep value $pwm");
+		exec("{$cfg['pwm_command']} {$channel} {$pwmstep}", $out, $ret);
+		if($ret > 0)
+			$state = log_message($state,"Failed to set pwm to $pwm channel $channel");
+		if(count($out) > 0)
+			$state = log_message($state,"We got unexpected results $out");
+		$state['pwm'][$channel] = $pwm;
+	}
+	return($state);
+
 }
 
 function shutdown() {
