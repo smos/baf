@@ -55,7 +55,7 @@ $state['chargers'][1]['ac'] = false;
 $state['chargers'][1]['dc'] = false;
 // Pre flight check
 $cfg['simulate'] = false;
-$cfg['batt_cells'] = 3;
+$cfg['batt_cells'] = 8;
 
 $battstate = array();
 // Battery status should connect the battery for us if it's good

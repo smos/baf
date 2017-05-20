@@ -1,7 +1,4 @@
-<?php
-/*
-Copyright 2017 Seth Mos <seth.mos@dds.nl>
-
+<?php /* Copyright 2017 Seth Mos <seth.mos@dds.nl>
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -46,24 +43,28 @@ $cfg['batt_dcpin'] = 6;
 $cfg['batt_pwm_channel'] = 2;
 $cfg['batt_pwm_shared'] = true;
 if($cfg['simulate'] === false)
-	$cfg['batt_cells'] = 3;
+	$cfg['batt_cells'] = 8;
 $cfg['batt_volt_crit_min'] = 3.2 * $cfg['batt_cells']; // Volt
 $cfg['batt_volt_crit_max'] = 4.2 * $cfg['batt_cells'];
 $cfg['batt_cell_crit_min'] = 3.2; // Volt
 $cfg['batt_cell_crit_max'] = 4.2;
-$cfg['batt_volt_min'] = 3.45 * $cfg['batt_cells'];
-$cfg['batt_volt_max'] = 4.05 * $cfg['batt_cells'];
-$cfg['batt_cell_min'] = 3.45;
-$cfg['batt_cell_max'] = 4.05;
+$cfg['batt_cell_min'] = 3.55;
+$cfg['batt_cell_max'] = 4.0;
+$cfg['batt_volt_min'] = $cfg['batt_cell_min'] * $cfg['batt_cells'];
+$cfg['batt_volt_max'] = $cfg['batt_cell_max'] * $cfg['batt_cells'];
 $cfg['batt_cell_cmd'] = "python ~/baf/readvoltage.py";
 // Use the calculator https://www.abelectronics.co.uk/tools/adc-pi-input-calc
 $cfg['batt_voltage_div'] = 6.9569;
 // Per cel voltage reading correction
-$cfg['batt_cell_correction'][0] = 0.99;
-$cfg['batt_cell_correction'][1] = 0.99;
-$cfg['batt_cell_correction'][2] = 0.98;
-$cfg['batt_cell_correction'][3] = 0.98;
-$cfg['batt_charge_taper'] = 20; // percent
+$cfg['batt_cell_correction'][0] = 0.996;
+$cfg['batt_cell_correction'][1] = 0.995;
+$cfg['batt_cell_correction'][2] = 0.981;
+$cfg['batt_cell_correction'][3] = 0.986;
+$cfg['batt_cell_correction'][4] = 0.983;
+$cfg['batt_cell_correction'][5] = 0.9945;
+$cfg['batt_cell_correction'][6] = 0.976;
+$cfg['batt_cell_correction'][7] = 0.985;
+$cfg['batt_charge_taper'] = 5; // percent
 $cfg['batt_discharge_taper'] = 20; //percent
 $cfg['batt_hysteresis'] = 0.05; // Volt
 $cfg['batt_timeout'] = 60;
@@ -73,16 +74,16 @@ $cfg['maintenance_charger_acpin'] = 4;
 $cfg['maintenance_diff'] = 0.2; // Volt
 
 // Define dead-band Thresholds
-$cfg['pow_gen_min'] = 10; // Watts
-$cfg['pow_cons_min'] = 10;
+$cfg['pow_gen_min'] = 20; // Watts
+$cfg['pow_cons_min'] = 20;
 $cfg['pwm_command'] = "python ~/baf/drive-pwm.py";
 
 // Set PWM limits for our charger and inverter, depends on the battery
 $cfg['inverters'][1]['pwm_min'] = 10; // Percent
-$cfg['inverters'][1]['pwm_max'] = 100;
+$cfg['inverters'][1]['pwm_max'] = 30;
 $cfg['inverters'][1]['pwm_channel'] = 0;
 $cfg['inverters'][1]['pwm_shared'] = true;
-$cfg['inverters'][1]['power'] = 250; // Watts
+$cfg['inverters'][1]['power'] = 600; // Watts
 $cfg['inverters'][1]['acpin'] = 0;
 $cfg['inverters'][1]['dcpin'] = 1;
 $cfg['inverters'][1]['standby'] = 300;
@@ -98,7 +99,7 @@ $cfg['chargers'][1]['pwm_min'] = 10; // Percent
 $cfg['chargers'][1]['pwm_max'] = 100;
 $cfg['chargers'][1]['pwm_channel'] = 1;
 $cfg['chargers'][1]['pwm_shared'] = true;
-$cfg['chargers'][1]['power'] = 185; // Watts
+$cfg['chargers'][1]['power'] = 36; // Watts
 $cfg['chargers'][1]['acpin'] = 2;
 $cfg['chargers'][1]['dcpin'] = 3;
 $cfg['chargers'][1]['standby'] = 60;

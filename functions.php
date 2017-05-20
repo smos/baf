@@ -94,6 +94,8 @@ function return_chargers_power($cfg) {
 	foreach($cfg['chargers'] as $idx => $charger) {
 		$power_max[$idx] = ($charger['power'] * $charger['pwm_max'])/100;
 		$power_min[$idx] = ($charger['power'] * $charger['pwm_min'])/100;
+		$power_max_abs[$idx] = ($charger['power']);
+		$power_min_abs[$idx] = ($charger['power']);
 	}
 	/* find smallest charger */
 	asort($power_min);
@@ -108,6 +110,8 @@ function return_chargers_power($cfg) {
 		break;
 	}
 	$chargers['power_max'] = array_sum($power_max);
+	$chargers['power_max_abs'] = array_sum($power_max_abs);
+	$chargers['power_min_abs'] = array_sum($power_min_abs);
 	return $chargers;
 }
 
@@ -117,6 +121,8 @@ function return_inverters_power($cfg) {
 	foreach($cfg['inverters'] as $idx => $inverter) {
 		$power_max[$idx] = ($inverter['power'] * $inverter['pwm_max'])/100;
 		$power_min[$idx] = ($inverter['power'] * $inverter['pwm_min'])/100;
+		$power_max_abs[$idx] = ($inverter['power']);
+		$power_min_abs[$idx] = ($inverter['power']);
 	}
 	/* find smallest inverter */
 	asort($power_min);
@@ -131,6 +137,8 @@ function return_inverters_power($cfg) {
 		break;
 	}
 	$inverters['power_max'] = array_sum($power_max);
+	$inverters['power_max_abs'] = array_sum($power_max_abs);
+	$inverters['power_min_abs'] = array_sum($power_min_abs);
 	return $inverters;
 }
 
@@ -150,6 +158,9 @@ function controller($cfg, $state, $power, $battstate, $dev) {
 		case -2:
 			$state[$state['operation']] = time();
 			$state['duration'][$state['operation']] = $state[$state['operation']] - $state[-1];
+			/* if the battery was disconnected we need to connect it before charging */
+			if($state['battery_connect'] === false)
+				toggle_battery(true);
 			/* calculate how much we can drive the PWM, the actual percentage is determined in the driver */
 			$power_diff = 0 - $power['power_gen_cur'] + $power['power_cons_cur'] - $cur_inverter_power;
 			// $state = log_message($state, "Consumption power diff = {$power_diff}, inverter power {$cur_inverter_power}");
@@ -482,7 +493,7 @@ function drive_chargers($state) {
 			$pwm = array();
 			$cpower = $state['charger_power'];
 			/* Calculate battery shared PWM, we really need to take current/battery voltege into account, meh */
-			$pwm['battery'] = ($state['charger_power']/$chargers['power_max']);
+			$pwm['battery'] = ($state['charger_power']/$chargers['power_max_abs']);
 			$c = 0;
 			foreach($cfg['chargers'] as $idx => $charger) {
 				$pwm[$idx] = 0;
@@ -642,7 +653,7 @@ function drive_inverters($state) {
 			$pwm = array();
 			$cpower = $state['inverter_power'];
 			/* Calculate battery shared PWM, we really need to take current/battery voltege into account, meh */
-			$pwm['battery'] = ($state['inverter_power']/$inverters['power_max']);
+			$pwm['battery'] = ($state['inverter_power']/$inverters['power_max_abs']);
 			/* Calculate individual PWM values */
 			$c = 0;
 			foreach($cfg['inverters'] as $idx => $inverter) {
